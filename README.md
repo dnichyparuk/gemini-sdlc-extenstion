@@ -18,6 +18,57 @@ See [GUIDE.md](GUIDE.md) for a full first-use walkthrough and detailed skill ref
 
 ---
 
+## 🌊 Automated Workflows
+
+The SDLC extension follows a rigorous **"Plan → Critique → Improve → Do"** pattern, ensuring high quality through automated quality gates.
+
+### The Shipping Pipeline (`/ship-sdlc`)
+
+```text
+       ┌──────────┐
+       │ Requirements │
+       └─────┬────┘
+             ▼
+     ┌───────────────┐
+     │  /plan-sdlc   │ ──► Critiques & Decomposes
+     └───────┬───────┘
+             ▼
+     ┌───────────────┐
+     │/execute-plan  │ ──► Parallel Implementation
+     └───────┬───────┘
+             ▼
+     ┌───────────────┐
+     │ /commit-sdlc  │ ──► Project-style Matching
+     └───────┬───────┘
+             ▼
+     ┌───────────────┐
+     │ /review-sdlc  │ ──► Multi-dimension Audit
+     └───────┬───────┘
+             ▼
+      (Quality Gate) ──────┐
+      │   Issues?    │     │
+      └──────┬───────┘     │
+         No  │     Yes     ▼
+             │      ┌───────────────┐
+             │      │/received-review│ ──► Automated Fixes
+             │      └───────┬───────┘
+             │              │
+             ▼ ◄────────────┘
+     ┌───────────────┐
+     │/version-sdlc  │ ──► SemVer & Tags
+     └───────┬───────┘
+             ▼
+     ┌───────────────┐
+     │   /pr-sdlc    │ ──► Multi-section Summary
+     └───────┬───────┘
+             ▼
+       ┌──────────┐
+       │   Ship!  │
+       └──────────┘
+```
+
+---
+
 ## Skills
 
 | Skill | Description |
