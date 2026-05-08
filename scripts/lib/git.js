@@ -101,7 +101,7 @@ function detectBaseBranch(projectRoot) {
   if (fromRemote) return fromRemote;
 
   for (const candidate of ['main', 'master']) {
-    const exists = exec(`git rev-parse --verify ${candidate} 2>/dev/null`, { cwd: projectRoot, shell: true });
+    const exists = exec(`git rev-parse --verify ${candidate}`, { cwd: projectRoot, shell: true });
     if (exists) return candidate;
   }
 
@@ -413,13 +413,13 @@ function ensureGhAccount(projectRoot) {
   const apiPath = `repos/${owner}/${repo}`;
 
   // Test active account first — maybe it has access despite not matching the name
-  const activeHasAccess = exec(`gh api ${apiPath} --silent 2>/dev/null`, { shell: true });
+  const activeHasAccess = exec(`gh api ${apiPath} --silent`, { shell: true });
   if (activeHasAccess !== null) return noOp; // active account works, no switch needed
 
   // Try each other account
   for (const candidate of accounts.filter(a => !a.active)) {
     exec(`gh auth switch --user ${candidate.login}`);
-    const hasAccess = exec(`gh api ${apiPath} --silent 2>/dev/null`, { shell: true });
+    const hasAccess = exec(`gh api ${apiPath} --silent`, { shell: true });
     if (hasAccess !== null) {
       return {
         switched: true,
@@ -677,7 +677,7 @@ function recoverGhAccountForRepo(projectRoot, errorText, opts = {}) {
  */
 function getRemoteState(projectRoot) {
   const upstream = exec(
-    'git rev-parse --abbrev-ref --symbolic-full-name @{upstream} 2>/dev/null',
+    'git rev-parse --abbrev-ref --symbolic-full-name @{upstream}',
     { cwd: projectRoot }
   );
   if (!upstream) return { hasUpstream: false, remoteBranch: null, isAhead: false, isBehind: false };

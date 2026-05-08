@@ -249,7 +249,7 @@ function main() {
   let baseBranch;
   if (baseBranchOverride) {
     const exists = exec(
-      `git rev-parse --verify origin/${baseBranchOverride} 2>/dev/null`,
+      `git rev-parse --verify origin/${baseBranchOverride}`,
       { cwd: projectRoot, shell: true }
     );
     if (!exists) {
