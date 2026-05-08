@@ -5,7 +5,7 @@
 
 - description: "error-report-prepare: assembles manifest with all required fields and writes JSON inline (no --output-file)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/error-report-prepare.js"
+    script_path: "repo://scripts/skill/error-report-prepare.js"
     script_args: "--skill commit-sdlc --step Step-0 --operation skill/commit.js --error-text exit-2-crash"
   assert:
     - type: icontains
@@ -24,7 +24,7 @@
 
 - description: "error-report-prepare: --output-file writes manifest to temp file and prints absolute path"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/error-report-prepare.js"
+    script_path: "repo://scripts/skill/error-report-prepare.js"
     script_args: "--skill pr-sdlc --step Step-2 --operation gh-pr-create --error-text 401-Bad-credentials --output-file"
   assert:
     # stdout is an absolute path, not the JSON manifest
@@ -36,7 +36,7 @@
 
 - description: "error-report-prepare: missing required field exits non-zero with errors[] in payload"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/error-report-prepare.js"
+    script_path: "repo://scripts/skill/error-report-prepare.js"
     script_args: "--skill commit-sdlc"
   assert:
     - type: icontains
@@ -50,7 +50,7 @@
 
 - description: "error-report-prepare: target repo and labels are produced by the script (not the agent)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/error-report-prepare.js"
+    script_path: "repo://scripts/skill/error-report-prepare.js"
     script_args: "--skill version-sdlc --step Step-3 --operation git-push --error-text remote-rejected"
   assert:
     - type: icontains

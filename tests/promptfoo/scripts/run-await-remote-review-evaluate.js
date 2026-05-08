@@ -3,7 +3,7 @@
  * run-await-remote-review-evaluate.js
  *
  * Test driver for the pure helper `evaluateReviews` exported by
- * plugins/sdlc-utilities/scripts/skill/await-remote-review.js.
+ * scripts/skill/await-remote-review.js.
  *
  * Usage:
  *   node run-await-remote-review-evaluate.js --reviews '<json>' --reviewers '<csv>'

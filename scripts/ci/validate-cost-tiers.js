@@ -19,7 +19,7 @@
  *   2 — parse / IO error
  *
  * Reuses extractFrontmatter + parseSimpleYaml from
- * `plugins/sdlc-utilities/scripts/lib/dimensions.js` per the dry guardrail.
+ * `scripts/lib/dimensions.js` per the dry guardrail.
  */
 
 'use strict';

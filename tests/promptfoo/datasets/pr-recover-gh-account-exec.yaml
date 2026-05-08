@@ -4,7 +4,7 @@
 
 - description: "pr-recover: permission error + matching account → recovered+switched"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr-recover-gh-account.js"
+    script_path: "repo://scripts/skill/pr-recover-gh-account.js"
     script_args: "--dry-run --accounts-file accounts.json --owner Cleeng --error-file perm-error.txt"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-recover-match"
@@ -18,7 +18,7 @@
 
 - description: "pr-recover: permission error + no matching account → hint emitted"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr-recover-gh-account.js"
+    script_path: "repo://scripts/skill/pr-recover-gh-account.js"
     script_args: "--dry-run --accounts-file accounts.json --owner Cleeng --error-file perm-error.txt"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-recover-nomatch"
@@ -32,7 +32,7 @@
 
 - description: "pr-recover: non-permission error (404) → reason=non-permission-error"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr-recover-gh-account.js"
+    script_path: "repo://scripts/skill/pr-recover-gh-account.js"
     script_args: "--dry-run --accounts-file accounts.json --owner Cleeng --error-file non-perm-error.txt"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-recover-match"
@@ -44,7 +44,7 @@
 
 - description: "pr-recover: error text missing CreatePullRequest token → reason=non-permission-error"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr-recover-gh-account.js"
+    script_path: "repo://scripts/skill/pr-recover-gh-account.js"
     script_args: "--dry-run --accounts-file accounts.json --owner Cleeng --error-file near-perm-error.txt"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-recover-match"
@@ -56,7 +56,7 @@
 
 - description: "pr-recover: case-insensitive match (owner Cleeng vs account cleeng) → switched"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr-recover-gh-account.js"
+    script_path: "repo://scripts/skill/pr-recover-gh-account.js"
     script_args: "--dry-run --accounts-file accounts.json --owner Cleeng --error-file perm-error.txt"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-recover-case"

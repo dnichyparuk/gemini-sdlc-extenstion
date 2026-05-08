@@ -5,7 +5,7 @@
 
 - description: "setup-sdlc --pr-template: proposes new template from scanned project signals"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-no-pr-template.md"
     user_request: "Run /setup-sdlc --pr-template to create a PR template for this project."
   assert:
@@ -30,7 +30,7 @@
 
 - description: "setup-sdlc --pr-template: edits existing template preserving custom sections"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-pr-template.md"
     user_request: "Run /setup-sdlc --pr-template to update the existing PR template."
   assert:
@@ -53,7 +53,7 @@
 
 - description: "setup-sdlc --pr-template: shows workflow continuation menu after template customization"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-template-customized.md"
     user_request: >
       Run /setup-sdlc --pr-template. The PR template has been customized and saved to

@@ -3,8 +3,8 @@
  * run-verify-pipeline-evaluate.js
  *
  * Test driver for the pure helpers exported by:
- *   - plugins/sdlc-utilities/scripts/skill/verify-pipeline.js (evaluateChecks)
- *   - plugins/sdlc-utilities/scripts/skill/verify-pipeline-sdlc-classify.js (classifyLogs)
+ *   - scripts/skill/verify-pipeline.js (evaluateChecks)
+ *   - scripts/skill/verify-pipeline-sdlc-classify.js (classifyLogs)
  *
  * Usage:
  *   node run-verify-pipeline-evaluate.js --op evaluateChecks --input '<json>'

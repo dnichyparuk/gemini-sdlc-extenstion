@@ -5,7 +5,7 @@
 
 - description: "ship-sdlc: dry-run shows pipeline table without executing any steps"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --dry-run. The project context is provided above. Load config,
@@ -36,7 +36,7 @@
 
 - description: "ship-sdlc: --auto mode proceeds without asking 'Run this pipeline?'"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --auto --steps execute,commit,review,pr,archive-openspec. Show
@@ -62,7 +62,7 @@
 
 - description: "ship-sdlc: CLI --preset is hard-rejected with migration pointer (#190)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-config-present.md"
     user_request: >
       Run /ship-sdlc --preset minimal --dry-run. The CLI flag --preset is no longer
@@ -85,7 +85,7 @@
 
 - description: "ship-sdlc: CLI --steps fully overrides config steps[] (#190)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-config-present.md"
     user_request: >
       Run /ship-sdlc --steps execute,commit,pr --dry-run. The CLI --steps fully
@@ -111,7 +111,7 @@
 
 - description: "ship-sdlc: critical review finding pauses pipeline and invokes received-review-sdlc"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-review-critical.md"
     user_request: >
       Run /ship-sdlc. The review step has completed with verdict CHANGES REQUESTED
@@ -139,7 +139,7 @@
 
 - description: "ship-sdlc: medium/low review findings continue pipeline without invoking received-review-sdlc"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc. The review step has just completed. The review verdict was
@@ -163,7 +163,7 @@
 
 - description: "ship-sdlc: --steps narrows pipeline to listed steps only (#190)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --steps commit,pr --dry-run. Show the pipeline table
@@ -192,7 +192,7 @@
 
 - description: "ship-sdlc: dry-run shows config loading, flag resolution, context detection, and auto-skip reasoning"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --dry-run. Show the full Step 1 output: config loading result,
@@ -218,7 +218,7 @@
 
 - description: "ship-sdlc: plan mode active causes immediate refusal with instructions to exit"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Plan mode is active. Run /ship-sdlc. The system context indicates plan mode
@@ -241,7 +241,7 @@
 
 - description: "ship-sdlc: --workspace worktree uses git worktree add/remove lifecycle"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-config-present.md"
     user_request: >
       Run /ship-sdlc --workspace worktree --dry-run. .sdlc/ship-config.json has
@@ -267,7 +267,7 @@
 
 - description: "ship-sdlc: --bump minor forwarded to version-sdlc in pipeline plan"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --bump minor --dry-run. Show the pipeline table and confirm
@@ -290,7 +290,7 @@
 
 - description: "ship-sdlc: pr step invocation uses computed args from ship-prepare.js, not SKILL.md example args"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-config-present.md"
     user_request: >
       Run /ship-sdlc --auto --dry-run. The project has .sdlc/local.json with
@@ -314,7 +314,7 @@
 
 - description: "ship-sdlc: OpenSpec pipeline summary includes both /opsx:verify and /opsx:archive"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc. The pipeline has completed successfully: execute, commit, review
@@ -339,7 +339,7 @@
 
 - description: "ship-sdlc: cleanup validation failure surfaces pipeline contract violation"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-validation-violation.md"
     user_request: >
       Run /ship-sdlc. The pipeline has reached Step 6 (REPORT). Execute, commit,
@@ -360,7 +360,7 @@
 
 - description: "ship-sdlc: pr step includes --draft when --draft CLI flag is passed"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --auto --draft --dry-run. The --draft flag is explicitly passed.
@@ -382,7 +382,7 @@
 
 - description: "ship-sdlc: emits override audit line when contradictory OpenSpec signal present"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-contradictory-signal.md"
     user_request: >
       Run /ship-sdlc --dry-run --workspace branch. The ship-prepare.js output and session-start
@@ -417,7 +417,7 @@
 
 - description: "ship-sdlc: archive-openspec step shown in pipeline table when triggered"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --dry-run --openspec-change add-auth. The project has openspec/config.yaml
@@ -435,7 +435,7 @@
 
 - description: "ship-sdlc: archive-openspec step skipped when no openspec match"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --dry-run. No openspec change matches the current branch.
@@ -456,7 +456,7 @@
 
 - description: "ship-sdlc: --bump rc forwards the label verbatim to version-sdlc"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: >
       The user runs `/ship-sdlc --bump rc --auto` on feat/payments. ship.js exits 0
       and emits a pipeline where the version step receives `rc` as its positional
@@ -498,7 +498,7 @@
 
 - description: "ship-sdlc: --bump 1foo (invalid label) is rejected at parse time"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: >
       The user runs `/ship-sdlc --bump 1foo`. ship.js exits 1 with this output:
       {"errors": ["--bump value '1foo' is invalid. Expected one of: major|minor|patch,
@@ -522,7 +522,7 @@
 
 - description: "ship-sdlc: learnings-commit step appears in default pipeline as final step (issue #208)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --dry-run. The project context is provided above. Load config,
@@ -546,7 +546,7 @@
 
 - description: "ship-sdlc: --steps execute,commit (without learnings-commit) records skipSource cli (issue #208)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-pipeline-ready.md"
     user_request: >
       Run /ship-sdlc --dry-run --steps execute,commit. The user explicitly omitted
@@ -570,7 +570,7 @@
 
 - description: "ship-sdlc: reviewThreshold=medium with 1 medium finding dispatches received-review-sdlc"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-verdict-medium-finding.md"
     user_request: >
       Run /ship-sdlc --auto. The project has reviewThreshold=medium and review
@@ -600,7 +600,7 @@
 
 - description: "ship-sdlc: verify-pipeline + await-remote-review render rows after pr in dry-run when in steps[] (R59)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     user_request: >
       The user invoked `/ship-sdlc --has-plan --steps execute,commit,review,pr,verify-pipeline,await-remote-review,archive-openspec,learnings-commit --dry-run`.
       Per R59, both new step rows must appear in the pipeline table immediately after `pr`,
@@ -621,7 +621,7 @@
 
 - description: "ship-sdlc: verify-pipeline and await-remote-review default to skipped when not in steps[]"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     user_request: >
       The user invoked `/ship-sdlc --has-plan --dry-run` (using BUILT_IN_DEFAULTS.steps,
       which does NOT include verify-pipeline or await-remote-review). Both new opt-in
@@ -637,7 +637,7 @@
 
 - description: "ship-sdlc: verify-pipeline + await-remote-review skipped when pr is excluded from steps[]"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     user_request: >
       The user invoked `/ship-sdlc --has-plan --steps execute,commit,verify-pipeline,await-remote-review --dry-run`.
       Because `pr` is not in flags.steps, both new steps must be skipped
@@ -650,7 +650,7 @@
 
 - description: "ship-sdlc: verify-pipeline failure under --auto dispatches verify-pipeline-sdlc subagent (R46)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/ship-sdlc/SKILL.md"
+    skill_path: "skills/ship-sdlc/SKILL.md"
     user_request: >
       The user invoked `/ship-sdlc --auto --steps execute,commit,review,pr,verify-pipeline,archive-openspec,learnings-commit`.
       The PR was opened, and `verify-pipeline.js` polled CI and emitted

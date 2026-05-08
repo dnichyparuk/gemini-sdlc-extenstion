@@ -265,7 +265,7 @@ Test step transitions as deterministic functions. Each test case invokes the scr
 ```yaml
 - description: "skill stepper: init returns first step"
   vars:
-    script_path: "plugins/sdlc-utilities/scripts/skill/example.js"
+    script_path: "scripts/skill/example.js"
     script_args: ""
     fixture_dir: "fixtures-fs/example-basic"
   assert:
@@ -289,7 +289,7 @@ Test the LLM's execution of the step loop:
 ```yaml
 - description: "skill: executes step-emitter loop correctly"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/example/SKILL.md"
+    skill_path: "skills/example/SKILL.md"
     project_context: "file://fixtures/example-stepper-context.md"
     user_request: "/example"
   assert:

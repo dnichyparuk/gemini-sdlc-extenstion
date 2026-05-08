@@ -4,7 +4,7 @@
 
 - description: "markdown-to-adf: simple paragraph"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/simple-paragraph.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -19,7 +19,7 @@
 
 - description: "markdown-to-adf: headings h1-h3"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/headings.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -34,7 +34,7 @@
 
 - description: "markdown-to-adf: bold and italic inline marks"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/bold-italic.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -49,7 +49,7 @@
 
 - description: "markdown-to-adf: unordered list"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/unordered-list.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -64,7 +64,7 @@
 
 - description: "markdown-to-adf: ordered list"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/ordered-list.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -77,7 +77,7 @@
 
 - description: "markdown-to-adf: fenced code block with language"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/fenced-code.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -90,7 +90,7 @@
 
 - description: "markdown-to-adf: inline code"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/inline-code.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -101,7 +101,7 @@
 
 - description: "markdown-to-adf: link"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/link.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -114,7 +114,7 @@
 
 - description: "markdown-to-adf: table with header row"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/table.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -129,7 +129,7 @@
 
 - description: "markdown-to-adf: blockquote"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/blockquote.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -140,7 +140,7 @@
 
 - description: "markdown-to-adf: horizontal rule"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/horizontal-rule.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -153,7 +153,7 @@
 
 - description: "markdown-to-adf: mixed realistic comment"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/mixed-realistic.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -170,7 +170,7 @@
 
 - description: "markdown-to-adf: empty input produces minimal doc"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/empty.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -183,7 +183,7 @@
 
 - description: "markdown-to-adf: code block preserves markdown syntax"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file {{project_root}}/code-with-markdown.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:
@@ -201,7 +201,7 @@
 
 - description: "markdown-to-adf: --file with non-existent path exits with error"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/lib/markdown-to-adf.js"
+    script_path: "repo://scripts/lib/markdown-to-adf.js"
     script_args: "--file /tmp/does-not-exist-markdown-to-adf-test.md"
     project_root: "file://fixtures-fs/markdown-to-adf"
   assert:

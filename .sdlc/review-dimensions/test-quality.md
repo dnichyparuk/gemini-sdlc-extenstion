@@ -29,7 +29,7 @@ Review promptfoo behavioral test datasets, fixtures, and supporting scripts for 
 - [ ] `not-icontains` / `not-regex` assertions verify meaningful exclusions (e.g., skill must NOT propose a dimension when evidence is absent) — not trivial negations
 - [ ] `llm-rubric` assertions describe expected behavior specifically enough that a grading LLM can distinguish pass from fail — no vague criteria like "response is good"
 - [ ] When a skill adds or changes behavior (new flags, new workflow steps), corresponding test cases are added or updated in the dataset — no untested behavior changes
-- [ ] `fixtures-fs/` directory-based fixtures have the expected file tree structure matching what the test scenario requires (e.g., `plugins/sdlc-utilities/skills/` hierarchy for discovery tests)
+- [ ] `fixtures-fs/` directory-based fixtures have the expected file tree structure matching what the test scenario requires (e.g., `skills/` hierarchy for discovery tests)
 - [ ] Test helper scripts in `tests/promptfoo/scripts/` handle edge cases (missing files, malformed input) without crashing — they should exit cleanly with a descriptive error
 - [ ] `promptfooconfig*.yaml` references valid dataset paths and provider configuration — no stale entries pointing to renamed or deleted datasets
 

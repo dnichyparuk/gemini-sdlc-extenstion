@@ -8,7 +8,7 @@ User invokes `/plan-sdlc` with the request:
 > it scans for files matching a glob pattern and emits a JSON manifest of file metadata
 > (path, size, sha256). The skill should expose a `--root <path>` flag and a `--pattern <glob>`
 > flag, default pattern `**/*`. Implement as a Claude Code skill under
-> `plugins/sdlc-utilities/skills/example-skill/`.
+> `skills/example-skill/`.
 
 ## Project Context
 
@@ -18,7 +18,7 @@ This is the **sdlc-marketplace** repo. The plugin in scope is `sdlc-utilities`.
 
 ```text
 .claude/sdlc.json                                  # SDLC config (guardrails live here)
-plugins/sdlc-utilities/
+
   skills/                                          # one subdirectory per skill
     plan-sdlc/SKILL.md
     execute-plan-sdlc/SKILL.md
@@ -79,7 +79,7 @@ skill must add a registry entry there or it will not appear on the docs site.
 ### What the plan must produce
 
 A plan that creates the new skill. Because the plan introduces
-`plugins/sdlc-utilities/skills/example-skill/SKILL.md`, the `skill-docs-required` guardrail
+`skills/example-skill/SKILL.md`, the `skill-docs-required` guardrail
 requires the plan's combined Files list to include all four companion artifacts:
 
 - `docs/specs/example-skill.md`

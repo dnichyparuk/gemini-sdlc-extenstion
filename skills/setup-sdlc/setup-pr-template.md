@@ -148,8 +148,7 @@ After the user accepts:
 After writing, locate and run the validation script:
 
 ```bash
-SCRIPT=$(find ~/.claude/plugins -name "validate-pr-template.js" -path "*/sdlc*/scripts/ci/validate-pr-template.js" 2>/dev/null | sort -V | tail -1)
-[ -z "$SCRIPT" ] && [ -f "plugins/sdlc-utilities/scripts/ci/validate-pr-template.js" ] && SCRIPT="plugins/sdlc-utilities/scripts/ci/validate-pr-template.js"
+SCRIPT="scripts/ci/validate-pr-template.js"
 [ -z "$SCRIPT" ] && { echo "ERROR: Could not locate ci/validate-pr-template.js. Is the sdlc plugin installed?" >&2; exit 2; }
 node "$SCRIPT" --project-root .
 EXIT_CODE=$?
@@ -205,8 +204,8 @@ When invoking `error-report-sdlc`, provide:
    *Mitigation:* If JIRA evidence is ambiguous (fewer than 2 matches, or multiple distinct key prefixes found), the parent asks the user for the project key explicitly before invoking this sub-flow.
 
 3. **validate-pr-template.js path resolution failure.**
-   *Symptom:* Validation step errors out and the user sees "ERROR: Could not locate validate-pr-template.js" — but the exit code is 2 (script not found), not 1 (validation failure), so the error recovery table routes it to `error-report-sdlc` instead of a simple retry.
-   *Root cause:* The `find ~/.claude/plugins` command finds nothing on a fresh install or when the plugin has not yet been fully cached locally. The fallback path (`plugins/sdlc-utilities/scripts/`) also fails if the sub-flow is invoked from outside the marketplace repo.
+   *Symptom:* Validation step errors out and the user sees "ERROR: Could not locate validate-pr-template.js".
+   *Root cause:* The relative path `scripts/ci/validate-pr-template.js` finds nothing on a fresh install or when the extension has not yet been fully linked.
    *Mitigation:* If the script is not found, skip validation and warn the user that validation was skipped rather than blocking the entire flow. Log the missing-script event so `error-report-sdlc` can surface it later.
 
 4. **Interactive customization loop accumulates inconsistent state.**

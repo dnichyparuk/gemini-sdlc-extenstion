@@ -6,7 +6,7 @@
 
 - description: "review-sdlc: multi-dimension review with active dimensions"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-dimensions.md"
     user_request: >
       Run /review-sdlc on this project. The review-prepare.js manifest is provided in the
@@ -33,7 +33,7 @@
 
 - description: "review-sdlc: dry-run shows plan without dispatching agents"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-dimensions.md"
     user_request: >
       Run /review-sdlc --dry-run on this project. The review-prepare.js manifest is in the
@@ -60,7 +60,7 @@
 
 - description: "review-sdlc: surfaces dimension suggestions for uncovered files"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-uncovered-suggestions.md"
     user_request: >
       Run /review-sdlc on this project. The review-prepare.js manifest is in the project context.
@@ -88,7 +88,7 @@
 
 - description: "review-sdlc: no dimensions installed reports error and suggests setup-sdlc"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-no-dimensions.md"
     user_request: "Run /review-sdlc on this project."
   assert:
@@ -108,7 +108,7 @@
 
 - description: "review-sdlc: --dimensions filter shows only selected dimension as active"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-filtered-dimensions.md"
     user_request: >
       Run /review-sdlc --dimensions security-review on this project. The review-prepare.js
@@ -129,7 +129,7 @@
 
 - description: "review-sdlc: committed scope shows branch changes only"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-committed-scope.md"
     user_request: >
       Run /review-sdlc --committed on this project. The review-prepare.js manifest is in
@@ -149,7 +149,7 @@
 
 - description: "review-sdlc: truncated dimension shows warning about file cap"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-truncated-dimension.md"
     user_request: >
       Run /review-sdlc on this project. The review-prepare.js manifest is in the project
@@ -168,7 +168,7 @@
 
 - description: "review-sdlc: queued dimensions shown when cap applied"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-queued-dimensions.md"
     user_request: >
       Run /review-sdlc on this project. The review-prepare.js manifest is in the project
@@ -189,7 +189,7 @@
 
 - description: "review-sdlc: over-broad dimension warning surfaced in plan"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-overbroad-warning.md"
     user_request: >
       Run /review-sdlc on this project. The review-prepare.js manifest is in the project
@@ -207,7 +207,7 @@
 
 - description: "review-sdlc: orchestrator dispatched with model from manifest"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-dimensions.md"
     user_request: >
       Run /review-sdlc on this project. The review-prepare.js manifest includes
@@ -223,7 +223,7 @@
 
 - description: "review-sdlc: post-confirmation yes posts via gh api -F body=@ without re-dispatch (issue #167)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/review-post-confirm-yes.md"
     user_request: >
       Continue the /review-sdlc flow. The orchestrator has already returned the summary shown
@@ -253,7 +253,7 @@
 
 - description: "review-sdlc: post-confirmation cancel — no gh api, no save, diff_dir cleaned (issue #167)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/review-post-confirm-cancel.md"
     user_request: >
       Continue the /review-sdlc flow. The orchestrator has already returned the summary shown
@@ -278,7 +278,7 @@
 
 - description: "review-sdlc: post-confirmation save — copies comment to .claude/reviews, no gh api (issue #167)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/review-post-confirm-save.md"
     user_request: >
       Continue the /review-sdlc flow. The orchestrator has already returned the summary shown
@@ -310,7 +310,7 @@
 
 - description: "review-sdlc: step-3-full-body-display — emits review-comment.md verbatim before posting prompt (issue #176)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/review-step-3-full-body-display.md"
     user_request: >
       The review-orchestrator has returned the summary in the project context and the
@@ -365,7 +365,7 @@
 
 - description: "review-sdlc: approved verdict completes cleanly without fix offer"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/review-verdict-approved.md"
     user_request: >
       The review-orchestrator has completed. The results are in the project context.
@@ -386,7 +386,7 @@
 
 - description: "review-sdlc: per-dimension model override (R15, #199) — orchestrator honors dimension.model"
   vars:
-    skill_path: "plugins/sdlc-utilities/agents/review-orchestrator.md"
+    skill_path: "agents/review-orchestrator.md"
     project_context: "file://fixtures/project-dimension-model-override.md"
     user_request: >
       The review-orchestrator is about to dispatch dimension subagents. The manifest in the
@@ -414,7 +414,7 @@
 
 - description: "review-sdlc: Copilot transform omits per-dimension model field (R15, #199)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/setup-dimensions.md"
+    skill_path: "skills/setup-sdlc/setup-dimensions.md"
     project_context: "file://fixtures/project-dimension-model-override.md"
     user_request: >
       The user runs /setup-sdlc --dimensions on a project where security-review.md declares
@@ -439,7 +439,7 @@
 
 - description: "review-sdlc: link verification (R14, #198) — invokes script gate before gh api comments POST"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    skill_path: "skills/review-sdlc/SKILL.md"
     project_context: "file://fixtures/review-post-confirm-yes.md"
     user_request: >
       The consolidated review-comment.md body contains a wrong-owner github URL
@@ -453,7 +453,7 @@
       value: "gh api"
     - type: llm-rubric
       value: >
-        The response describes invoking plugins/sdlc-utilities/scripts/lib/links.js as a hard gate
+        The response describes invoking scripts/lib/links.js as a hard gate
         before gh api ... /comments, passes the comment_file via --file, and explicitly states that
         on non-zero exit gh api is NOT executed. The gate is script-enforced. The skill does not
         propose retrying, editing URLs without user input, or bypassing.
@@ -484,7 +484,7 @@
 
 - description: "review-sdlc: OWASP A01 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -501,7 +501,7 @@
       ```
 
       The dimension body instructs OWASP tagging. Produce the finding using the format defined in
-      plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md §2 (Output Format for findings) — the
+      skills/review-sdlc/REFERENCE.md §2 (Output Format for findings) — the
       OWASP slot is optional but REQUIRED here because the dimension body asks for it.
   assert:
     - type: regex
@@ -517,7 +517,7 @@
 
 - description: "review-sdlc: OWASP A02 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -547,7 +547,7 @@
 
 - description: "review-sdlc: OWASP A03 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -574,7 +574,7 @@
 
 - description: "review-sdlc: OWASP A04 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -606,7 +606,7 @@
 
 - description: "review-sdlc: OWASP A05 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -635,7 +635,7 @@
 
 - description: "review-sdlc: OWASP A06 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -665,7 +665,7 @@
 
 - description: "review-sdlc: OWASP A07 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -695,7 +695,7 @@
 
 - description: "review-sdlc: OWASP A08 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -727,7 +727,7 @@
 
 - description: "review-sdlc: OWASP A09 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:
@@ -760,7 +760,7 @@
 
 - description: "review-sdlc: OWASP A10 — finding tagged with category (issue #272)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    skill_path: "skills/review-sdlc/REFERENCE.md"
     user_request: "Produce the security finding for the diff above."
     skill_content: |
       You are running the review-sdlc security-review dimension subagent against this diff:

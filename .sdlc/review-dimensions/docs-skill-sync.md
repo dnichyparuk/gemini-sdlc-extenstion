@@ -23,7 +23,7 @@ Review that every skill definition change is propagated to all three downstream 
 ## Checklist
 
 ### 1:1 existence checks
-- [ ] Every skill directory under `plugins/sdlc-utilities/skills/<name>/` has a matching `docs/skills/<name>.md`
+- [ ] Every skill directory under `skills/<name>/` has a matching `docs/skills/<name>.md`
 - [ ] Every user-invocable skill has a row in the `README.md` Skills table (non-user-invocable skills like `error-report-sdlc` still need a doc but not a README row)
 - [ ] Every user-invocable skill has an entry in `site/src/data/skills-meta.ts` `skillsMeta` array with matching `slug`
 

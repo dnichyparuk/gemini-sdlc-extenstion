@@ -10,7 +10,7 @@
 
 - description: "jira-sdlc: shows workflow continuation menu after Jira ticket created"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-ticket-created.md"
     user_request: >
       Run /jira-sdlc. A Jira ticket PROJ-142 has been created successfully — it's a Story
@@ -33,7 +33,7 @@
 
 - description: "jira-sdlc: follows create operation procedure from operations reference"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-create-task.md"
     user_request: >
       Run /jira-sdlc. Create a Task in PROJ with summary "Add rate limiting to
@@ -69,7 +69,7 @@
 
 - description: "jira-sdlc: converts comment to ADF before posting via addCommentToJiraIssue"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-comment-adf.md"
     user_request: >
       Run /jira-sdlc. Add a comment to PROJ-150 with a heading, bullet list, and
@@ -105,7 +105,7 @@
 
 - description: "jira-sdlc: multi-project config — closed-list prompt for project selection (R13)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-multi-project-closed-list.md"
     user_request: >
       Run /jira-sdlc. No --project argument. Current branch is "main" (no
@@ -135,7 +135,7 @@
 
 - description: "jira-sdlc: unsampled workflow — transition falls back to live getTransitionsForJiraIssue (R14)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-unsampled-transition.md"
     user_request: >
       Run /jira-sdlc. Transition PROJ-147 to Done. The cache has
@@ -172,7 +172,7 @@
 
 - description: "jira-sdlc R17: write-op approval gate prompts before createJiraIssue dispatch"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-create-task.md"
     user_request: >
       Run /jira-sdlc. Create a bug in PROJ: "login button broken on mobile Safari".
@@ -200,7 +200,7 @@
 
 - description: "jira-sdlc R18: createJiraIssue requires a resolved description template"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-create-task.md"
     user_request: >
       Run /jira-sdlc. Create a Subtask in PROJ: "refactor cache layer". Note that
@@ -227,7 +227,7 @@
 
 - description: "jira-sdlc R19: low-confidence placeholders escalate to AskUserQuestion"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-create-task.md"
     user_request: >
       Run /jira-sdlc. Create a Story for the new dashboard. The user has given
@@ -253,7 +253,7 @@
 
 - description: "jira-sdlc R20: critique block (Initial/Critique/Final) surfaces before approval"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-create-task.md"
     user_request: >
       Run /jira-sdlc. Edit BUG-42 in PROJ to add a Steps to Reproduce section in
@@ -280,7 +280,7 @@
 
 - description: "jira-sdlc: cloudId auth error triggers single refresh+retry, never loops"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-cloudid-auth-error.md"
     user_request: >
       Run /jira-sdlc. Create a Bug "auth retry test" in PROJ. The cache is
@@ -304,7 +304,7 @@
 
 - description: "jira-sdlc: namespace fallback retries under mcp__claude_ai_Atlassian__ on cloudId auth fail"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/jira-sdlc/SKILL.md"
+    skill_path: "skills/jira-sdlc/SKILL.md"
     project_context: "file://fixtures/jira-namespace-fallback.md"
     user_request: >
       Run /jira-sdlc. Create a Bug "namespace fallback test" in PROJ. Both

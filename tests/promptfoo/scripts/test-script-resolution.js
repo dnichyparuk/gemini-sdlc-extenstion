@@ -3,7 +3,7 @@
  *
  * Simulates the 3-line bash pattern used by all skills to locate helper scripts:
  *   1. find $HOME/.claude/plugins -name "<basename>" -path "*\/sdlc*\/scripts/<script-path>"  (installed plugin)
- *   2. [ -f "plugins/sdlc-utilities/scripts/<script-path>" ]  (dev fallback)
+ *   2. [ -f "scripts/<script-path>" ]  (dev fallback)
  *   3. error exit if neither found
  *
  * The fixture directory passed via --project-root must contain:
@@ -12,7 +12,7 @@
  *
  * Output (stdout): JSON line, e.g.
  *   {"resolved":"/path/to/script.js","source":"installed"}
- *   {"resolved":"plugins/sdlc-utilities/scripts/skill/pr.js","source":"local"}
+ *   {"resolved":"scripts/skill/pr.js","source":"local"}
  *   {"resolved":null,"source":"error"}
  *
  * Usage: node test-script-resolution.js --script-name pr.js --script-path skill/pr.js --project-root /tmp/fixture-xyz
@@ -39,10 +39,10 @@ const fakeRepo = path.join(projectRoot, 'fake-repo');
 
 // Build the bash script that mirrors the verbatim skill pattern.
 // Uses fakeHome as HOME and runs with CWD=fakeRepo so the local fallback
-// path ("plugins/sdlc-utilities/scripts/<path>") resolves correctly.
+// path ("scripts/<path>") resolves correctly.
 const bashScript = `
 SCRIPT=$(find "${fakeHome}/.claude/plugins" -name "${scriptName}" -path "*/sdlc*/scripts/${scriptPath}" 2>/dev/null | sort -V | tail -1)
-[ -z "$SCRIPT" ] && [ -f "plugins/sdlc-utilities/scripts/${scriptPath}" ] && SCRIPT="plugins/sdlc-utilities/scripts/${scriptPath}"
+[ -z "$SCRIPT" ] && [ -f "scripts/${scriptPath}" ] && SCRIPT="scripts/${scriptPath}"
 if [ -z "$SCRIPT" ]; then
   printf '{"resolved":null,"source":"error"}\\n'
   exit 0

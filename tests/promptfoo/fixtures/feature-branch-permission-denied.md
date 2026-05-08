@@ -45,7 +45,7 @@ Exit code: 1.
 
 ## Available helper
 
-The skill installation contains `plugins/sdlc-utilities/scripts/skill/pr-recover-gh-account.js`.
+The skill installation contains `scripts/skill/pr-recover-gh-account.js`.
 
 Invoking it with `--error-file <tmp>` against the captured stderr returns:
 

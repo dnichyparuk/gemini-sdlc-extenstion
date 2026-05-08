@@ -1,4 +1,4 @@
-# Script execution tests for plugins/sdlc-utilities/scripts/lib/git.js — issue #239.
+# Script execution tests for scripts/lib/git.js — issue #239.
 # Validates the new fetchBaseRef helper (best-effort, non-fatal) and the
 # buildBranchContribDiffCmd helper (three-dot semantics for branch-contribution scopes).
 # These run real Node.js scripts against fixture directories (no LLM).

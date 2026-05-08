@@ -102,7 +102,7 @@ Creates the story in the BACKEND project using the Story template.
 
 ## Custom Issue Templates
 
-Default templates ship in `plugins/sdlc-utilities/skills/jira-sdlc/templates/` — one file per issue type:
+Default templates ship in `skills/jira-sdlc/templates/` — one file per issue type:
 
 - `Bug.md`
 - `Story.md`
@@ -116,7 +116,7 @@ Project-level overrides live at `.claude/jira-templates/<IssueTypeName>.md`. Fil
 Resolution order:
 
 1. **Project custom** — `.claude/jira-templates/<IssueTypeName>.md`
-2. **Skill default** — `plugins/sdlc-utilities/skills/jira-sdlc/templates/<IssueTypeName>.md`
+2. **Skill default** — `skills/jira-sdlc/templates/<IssueTypeName>.md`
 3. **Subtask fallback** — when none of the above exist, the prepare script consults a fallback map for subtask variants (see below).
 4. **No template** — when no fallback applies, the skill emits a warning and aborts the operation.
 

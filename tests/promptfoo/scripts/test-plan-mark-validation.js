@@ -31,7 +31,7 @@ for (let i = 0; i < args.length; i++) {
 let repoRoot = null;
 let dir = __dirname;
 while (dir !== path.dirname(dir)) {
-  if (fs.existsSync(path.join(dir, 'plugins/sdlc-utilities/scripts/skill/plan.js'))) {
+  if (fs.existsSync(path.join(dir, 'scripts/skill/plan.js'))) {
     repoRoot = dir;
     break;
   }
@@ -43,7 +43,7 @@ if (!repoRoot) {
   process.exit(1);
 }
 
-const planScript = path.join(repoRoot, 'plugins/sdlc-utilities/scripts/skill/plan.js');
+const planScript = path.join(repoRoot, 'scripts/skill/plan.js');
 
 function runPlan(extraArgs) {
   const result = spawnSync('node', [planScript, ...extraArgs], {

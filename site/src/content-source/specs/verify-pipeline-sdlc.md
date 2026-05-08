@@ -4,7 +4,7 @@
 
 **User-invocable:** yes
 **Model:** sonnet
-**Prepare script:** none (uses inline classifier helper at `plugins/sdlc-utilities/scripts/skill/verify-pipeline-sdlc-classify.js`)
+**Prepare script:** none (uses inline classifier helper at `scripts/skill/verify-pipeline-sdlc-classify.js`)
 
 ## Arguments
 

@@ -65,7 +65,7 @@ if (!branchOverride) {
 let repoRoot = null;
 let dir = __dirname;
 while (dir !== path.dirname(dir)) {
-  if (fs.existsSync(path.join(dir, 'plugins/sdlc-utilities/hooks/stop-plan-integrity.js'))) {
+  if (fs.existsSync(path.join(dir, 'hooks/stop-plan-integrity.js'))) {
     repoRoot = dir;
     break;
   }
@@ -77,7 +77,7 @@ if (!repoRoot) {
   process.exit(1);
 }
 
-const hookScript = path.join(repoRoot, 'plugins/sdlc-utilities/hooks/stop-plan-integrity.js');
+const hookScript = path.join(repoRoot, 'hooks/stop-plan-integrity.js');
 
 // ---------------------------------------------------------------------------
 // Optional: rewrite planFilePath in state file to use actual project-root

@@ -18,7 +18,7 @@ When the runtime needs to decide which model to run a surface on, it evaluates t
 
 ## 3. Skill Table
 
-One row per skill in `plugins/sdlc-utilities/skills/`.
+One row per skill in `skills/`.
 
 | Skill | Model | Rationale |
 |---|---|---|
@@ -37,7 +37,7 @@ One row per skill in `plugins/sdlc-utilities/skills/`.
 
 ## 4. Agent Table
 
-One row per agent in `plugins/sdlc-utilities/agents/`.
+One row per agent in `agents/`.
 
 | Agent | Model | Rationale |
 |---|---|---|
@@ -50,10 +50,10 @@ One row per agent in `plugins/sdlc-utilities/agents/`.
 
 Files where per-call `model:` is computed at runtime and **wins over frontmatter**:
 
-- `plugins/sdlc-utilities/scripts/skill/ship.js` — passes per-step `model:` for each pipeline phase.
-- `plugins/sdlc-utilities/scripts/skill/execute.js` — passes per-task `model:` based on task complexity (Trivial → haiku, Standard → sonnet, Complex → opus).
-- `plugins/sdlc-utilities/scripts/skill/review.js` — passes per-dimension `model:` resolved from each dimension file's own frontmatter.
-- `plugins/sdlc-utilities/skills/plan-sdlc/SKILL.md` — cross-model plan-reviewer rule (sonnet reviews opus-authored plans, and vice versa) at 5+ tasks.
+- `scripts/skill/ship.js` — passes per-step `model:` for each pipeline phase.
+- `scripts/skill/execute.js` — passes per-task `model:` based on task complexity (Trivial → haiku, Standard → sonnet, Complex → opus).
+- `scripts/skill/review.js` — passes per-dimension `model:` resolved from each dimension file's own frontmatter.
+- `skills/plan-sdlc/SKILL.md` — cross-model plan-reviewer rule (sonnet reviews opus-authored plans, and vice versa) at 5+ tasks.
 
 When ship-sdlc invokes a sub-skill, the sub-skill's frontmatter `model:` is shadowed by the per-step value computed in `ship.js`. Consumers should not assume frontmatter applies inside a pipeline.
 

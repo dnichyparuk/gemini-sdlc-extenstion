@@ -5,7 +5,7 @@
 
 - description: "execute-plan-sdlc: shows workflow continuation menu after plan execution"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/plan-execution-complete.md"
     user_request: >
       Run /execute-plan-sdlc. The plan execution has completed — all waves finished, all tasks
@@ -34,7 +34,7 @@
 
 - description: "execute-plan-sdlc: skips quality-tier selection when --quality balanced is provided"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/feature-branch-with-commits.md"
     user_request: >
       Run /execute-plan-sdlc --quality balanced. A plan with 5 tasks has been loaded and
@@ -53,7 +53,7 @@
 
 - description: "execute-plan-sdlc: loads execution guardrails from config and evaluates during execution"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/plan-execution-with-guardrails.md"
     user_request: >
       Run /execute-plan-sdlc --quality balanced. A plan with 4 tasks has been loaded and validated.
@@ -73,7 +73,7 @@
 
 - description: "execute-plan-sdlc: proceeds normally when no execution guardrails configured"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/plan-execution-complete.md"
     user_request: >
       Run /execute-plan-sdlc --quality balanced. A plan has been loaded. No execution guardrails are
@@ -90,7 +90,7 @@
 
 - description: "execute-plan-sdlc: model parameter required on every agent dispatch per quality tier"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/feature-branch-with-commits.md"
     user_request: >
       Run /execute-plan-sdlc --quality balanced. A plan with 5 tasks (2 Trivial, 2 Standard,
@@ -111,7 +111,7 @@
 
 - description: "execute-plan-sdlc: emits archive suggestion when OpenSpec plan and validation passes"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/plan-execution-complete.md"
     user_request: >
       Run /execute-plan-sdlc. The plan execution has completed — all waves finished, all tasks
@@ -132,7 +132,7 @@
 
 - description: "execute-plan-sdlc: suppresses archive suggestion when validation fails"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/plan-execution-complete.md"
     user_request: >
       Run /execute-plan-sdlc. The plan execution has completed — all waves finished.
@@ -152,7 +152,7 @@
 
 - description: "execute-plan-sdlc: falls back to static advisory when CLI not available"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/plan-execution-complete.md"
     user_request: >
       Run /execute-plan-sdlc. The plan execution has completed — all waves finished.
@@ -170,7 +170,7 @@
 
 - description: "execute-plan-sdlc: Learning Capture writes to log.md before Step 9 REPORT (issue #208)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    skill_path: "skills/execute-plan-sdlc/SKILL.md"
     project_context: "file://fixtures/execute-plan-ready.md"
     user_request: >
       A 2-task plan has just finished executing. A guardrail was overridden by the

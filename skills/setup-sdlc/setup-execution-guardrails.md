@@ -12,16 +12,14 @@ Sub-flow of `/setup-sdlc --execution-guardrails`. Runs skill/guardrails.js with 
 
 ### Step 0 — Prepare
 
-Run skill/guardrails.js:
+Run `scripts/skill/guardrails.js`:
 
 ```bash
-SCRIPT=$(find ~/.claude/plugins -name "guardrails.js" -path "*/sdlc*/scripts/skill/guardrails.js" 2>/dev/null | sort -V | tail -1)
-[ -z "$SCRIPT" ] && [ -f "plugins/sdlc-utilities/scripts/skill/guardrails.js" ] && SCRIPT="plugins/sdlc-utilities/scripts/skill/guardrails.js"
-[ -z "$SCRIPT" ] && { echo "ERROR: Could not locate skill/guardrails.js" >&2; exit 2; }
+SCRIPT="scripts/skill/guardrails.js"
+[ ! -f "$SCRIPT" ] && { echo "ERROR: Could not locate $SCRIPT."; exit 2; }
 
 PREPARE_OUTPUT_FILE=$(node "$SCRIPT" --output-file --project-root . --target execute --mode {init|add} --json)
 EXIT_CODE=$?
-echo "EXIT_CODE=$EXIT_CODE"
 cat "$PREPARE_OUTPUT_FILE"
 rm -f "$PREPARE_OUTPUT_FILE"
 ```
@@ -30,14 +28,14 @@ Replace `{init|add}` with `add` if `--add` was passed, otherwise `init`.
 
 Parse JSON output. If `errors` non-empty, show errors and stop. Store `signals`, `proposals`, and `existing`.
 
-If not in `--add` mode and `existing.count > 0`: Use AskUserQuestion: "N execution guardrails already configured. Replace all, or use --add to expand?" Options: replace / cancel. On cancel, stop.
+If not in `--add` mode and `existing.count > 0`: Use `ask_user`: "N execution guardrails already configured. Replace all, or use --add to expand?" Options: replace / cancel. On cancel, stop.
 
 ### Step 1 (REVIEW) — Refine Script-Generated Proposals
 
 The prepare script produced proposals with evidence from its template catalog. The LLM:
 
 1. Reviews each proposal for project-specific accuracy
-2. Checks if `claudeMdRules` from output suggest additional guardrails beyond the template catalog
+2. Checks if `claudeMdRules` from output suggest additional guardrails
 3. May refine descriptions to be more specific based on `signals` data
 4. Drops proposals that don't make sense despite matching a signal
 5. Caps at 3–8 proposals
@@ -46,7 +44,7 @@ This is lightweight — reviewing and filtering for runtime code constraints, no
 
 ### Step 2 (PRESENT) — Interactive Selection
 
-Present refined proposals as a numbered list with evidence. Use AskUserQuestion:
+Present refined proposals as a numbered list with evidence. Use `ask_user`:
 
 > Install which execution guardrails?
 
@@ -64,12 +62,8 @@ On **custom**: collect id (validate kebab-case pattern `^[a-z][a-z0-9]*(-[a-z0-9
 Write selected guardrails via inline Node.js using config library:
 
 ```bash
-SCRIPT_DIR=$(find ~/.claude/plugins -name "config.js" -path "*/sdlc*/lib/config.js" 2>/dev/null | sort -V | tail -1 | xargs dirname 2>/dev/null)
-[ -z "$SCRIPT_DIR" ] && [ -f "plugins/sdlc-utilities/scripts/lib/config.js" ] && SCRIPT_DIR="plugins/sdlc-utilities/scripts/lib"
-[ -z "$SCRIPT_DIR" ] && { echo "ERROR: Could not locate lib/config.js" >&2; exit 2; }
-
 node -e "
-const { writeSection } = require('$SCRIPT_DIR/config.js');
+const { writeSection } = require('./scripts/lib/config.js');
 const guardrails = JSON.parse(process.argv[1]);
 writeSection(process.cwd(), 'execute', { guardrails });
 console.log('Wrote ' + guardrails.length + ' execution guardrails to .sdlc/config.json');
@@ -81,8 +75,7 @@ Replace `<GUARDRAILS_JSON>` with the JSON array of selected guardrails. In `--ad
 ### Step 4 (VALIDATE) — Run Validation Script
 
 ```bash
-SCRIPT=$(find ~/.claude/plugins -name "validate-guardrails.js" -path "*/sdlc*/scripts/ci/validate-guardrails.js" 2>/dev/null | sort -V | tail -1)
-[ -z "$SCRIPT" ] && [ -f "plugins/sdlc-utilities/scripts/ci/validate-guardrails.js" ] && SCRIPT="plugins/sdlc-utilities/scripts/ci/validate-guardrails.js"
+SCRIPT="scripts/ci/validate-guardrails.js"
 [ -z "$SCRIPT" ] && { echo "ERROR: Could not locate ci/validate-guardrails.js" >&2; exit 2; }
 
 node "$SCRIPT" --project-root . --section execute --json

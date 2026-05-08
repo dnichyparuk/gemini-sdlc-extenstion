@@ -4,7 +4,7 @@
 
 - description: "error-report-sdlc: proposes GitHub issue for script crash (exit code 2)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/error-report-sdlc/SKILL.md"
+    skill_path: "skills/error-report-sdlc/SKILL.md"
     project_context: "file://fixtures/script-crash-context.md"
     user_request: >
       The pr-sdlc skill encountered an error during Step 1 and has invoked
@@ -38,7 +38,7 @@
 
 - description: "error-report-sdlc: skips issue proposal for user error (exit code 1)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/error-report-sdlc/SKILL.md"
+    skill_path: "skills/error-report-sdlc/SKILL.md"
     project_context: "file://fixtures/user-error-context.md"
     user_request: >
       The version-sdlc skill encountered an error during Step 0 and has invoked

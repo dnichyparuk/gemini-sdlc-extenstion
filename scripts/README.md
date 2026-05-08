@@ -1,6 +1,6 @@
 # Scripts Directory
 
-Helper scripts for the sdlc-utilities plugin, organized by audience.
+Helper scripts for the sdlc-gemini extension, organized by audience.
 
 ## Directory Structure
 
@@ -51,14 +51,12 @@ scripts/
 
 ## Script Resolution
 
-Skills locate scripts using a two-step pattern:
+Skills locate scripts using a simple relative path pattern:
 
 ```bash
-# 1. Installed plugin (find in plugin cache)
-SCRIPT=$(find ~/.claude/plugins -name "<name>.js" -path "*/sdlc*/scripts/<subdir>/<name>.js" 2>/dev/null | sort -V | tail -1)
-
-# 2. Development fallback (relative to repo root)
-[ -z "$SCRIPT" ] && [ -f "plugins/sdlc-utilities/scripts/<subdir>/<name>.js" ] && SCRIPT="plugins/sdlc-utilities/scripts/<subdir>/<name>.js"
+# Relative to repo root
+SCRIPT="scripts/<subdir>/<name>.js"
+[ ! -f "$SCRIPT" ] && { echo "ERROR: <name>.js not found"; exit 2; }
 ```
 
 All scripts use `__dirname`-based resolution for `lib/` imports:

@@ -609,8 +609,8 @@ function computeSteps(flags, flagSources, { openspecContext } = {}) {
   // command variants are emitted; SKILL.md selects `forced` when any prior
   // step has status: "failed", `normal` otherwise.
   //
-  // The path resolution is deferred to the skill (find ~/.claude/plugins +
-  // fallback to plugins/sdlc-utilities/scripts/state/ship.js) — same pattern
+  // The path resolution is deferred to the skill (simple relative path
+  // from the extension root) — same pattern
   // as every other state-script invocation in SKILL.md. We pass the script
   // path placeholder `<state-ship>` here for documentation; the skill
   // substitutes `$SCRIPT` at runtime.

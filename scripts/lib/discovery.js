@@ -66,7 +66,7 @@ const RE_FIND_SCRIPT = /find\s[^`\n]*?-name\s+["']([^"'<>]+\.js)["']/g;
 const RE_PATH_SCRIPT = /-path\s+["']\*\/sdlc\*\/scripts\/([^\s"'<>]+\.js)["']/g;
 
 // Extract script filenames from direct-path fallback pattern:
-// plugins/sdlc-utilities/scripts/<subdir>/<script>.js
+// scripts/<subdir>/<script>.js
 const RE_DIRECT_SCRIPT = /plugins\/sdlc-utilities\/scripts\/([^\s"'<>]+\.js)/g;
 
 function extractScriptRefs(content) {

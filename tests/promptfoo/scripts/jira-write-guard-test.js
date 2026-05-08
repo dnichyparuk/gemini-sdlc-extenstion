@@ -40,8 +40,8 @@ const { spawnSync } = require('child_process');
 const crypto = require('crypto');
 
 const REPO_ROOT = path.resolve(__dirname, '../../..');
-const LIB = path.join(REPO_ROOT, 'plugins/sdlc-utilities/skills/jira-sdlc/lib');
-const HOOK = path.join(REPO_ROOT, 'plugins/sdlc-utilities/hooks/pre-tool-jira-write-guard.js');
+const LIB = path.join(REPO_ROOT, 'skills/jira-sdlc/lib');
+const HOOK = path.join(REPO_ROOT, 'hooks/pre-tool-jira-write-guard.js');
 
 const { payloadHash } = require(path.join(LIB, 'payload-hash.js'));
 const { findPlaceholders, findPlaceholdersForToolInput, PLACEHOLDER_REGEX } = require(path.join(LIB, 'placeholder-detect.js'));
@@ -175,7 +175,7 @@ function helperTemplateFallback() {
   // Issue #241: FALLBACK_MAP must cover all three keys (Sub-bug, Sub-task, Subtask).
   // Build a temp templates dir with only Bug.md + Task.md so the fallback arm
   // fires for every subtask variant (including Sub-task → Task).
-  const { resolveTemplateStatus } = require(path.join(REPO_ROOT, 'plugins/sdlc-utilities/scripts/skill/jira.js')).__testExports || {};
+  const { resolveTemplateStatus } = require(path.join(REPO_ROOT, 'scripts/skill/jira.js')).__testExports || {};
   // The script does not export __testExports today; replicate the call via spawnSync
   // against --templates with a controlled templates dir + cache fixture.
   const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'jira-fallback-'));
@@ -199,7 +199,7 @@ function helperTemplateFallback() {
       },
       fieldSchemas: {}, workflows: {}, linkTypes: [], userMappings: {},
     }), 'utf8');
-    const SCRIPT = path.join(REPO_ROOT, 'plugins/sdlc-utilities/scripts/skill/jira.js');
+    const SCRIPT = path.join(REPO_ROOT, 'scripts/skill/jira.js');
     const r = spawnSync('node', [SCRIPT, '--project', 'FB', '--templates', '--templates-dir', tplDir], {
       cwd: tmpRoot,
       env: { ...process.env, HOME: tmpRoot },

@@ -6,7 +6,7 @@ This repository serves two roles:
 
 1. **Marketplace** — The root `.claude-plugin/marketplace.json` makes the repo installable
    as a Claude Code marketplace
-2. **Plugin** — One plugin lives under `plugins/sdlc-utilities/` with its own skills, commands, hooks,
+2. **Plugin** — One plugin lives under `` with its own skills, commands, hooks,
    scripts, and agents
 
 ## Directory Structure
@@ -206,7 +206,7 @@ tests/promptfoo/
 ```yaml
 - description: "skill-name: test scenario description"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/<skill>/SKILL.md"
+    skill_path: "skills/<skill>/SKILL.md"
     project_context: "file://fixtures/<fixture>.md"
     user_request: "..."
   assert:

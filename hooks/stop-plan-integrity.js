@@ -131,7 +131,7 @@ try {
 
   let transcriptPath = null;
   try {
-    const raw = fs.readFileSync('/dev/stdin', 'utf8');
+    const raw = fs.readFileSync(0, 'utf8');
     if (raw && raw.trim()) {
       const payload = JSON.parse(raw);
       if (typeof payload.transcript_path === 'string') {

@@ -47,7 +47,7 @@ for (let i = 0; i < args.length; i++) {
 if (!repoRoot) {
   let dir = __dirname;
   while (dir !== path.dirname(dir)) {
-    if (fs.existsSync(path.join(dir, 'plugins/sdlc-utilities/scripts/skill/plan.js'))) {
+    if (fs.existsSync(path.join(dir, 'scripts/skill/plan.js'))) {
       repoRoot = dir;
       break;
     }
@@ -60,7 +60,7 @@ if (!repoRoot) {
   process.exit(1);
 }
 
-const planScript = path.join(repoRoot, 'plugins/sdlc-utilities/scripts/skill/plan.js');
+const planScript = path.join(repoRoot, 'scripts/skill/plan.js');
 
 // ---------------------------------------------------------------------------
 // Helper: run plan.js with given args, returns { stdout, stderr, status }

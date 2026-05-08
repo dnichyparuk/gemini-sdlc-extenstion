@@ -8,7 +8,7 @@
 
 - description: "plan-format: valid plan passes all checks (JSON)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-plan-format.js"
+    script_path: "repo://scripts/ci/validate-plan-format.js"
     script_args: "--project-root {{project_root}} --file {{project_root}}/plans/test-plan.md --json"
     project_root: "file://fixtures-fs/project-valid-plan"
   assert:
@@ -21,7 +21,7 @@
 
 - description: "plan-format: valid plan passes all checks (markdown)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-plan-format.js"
+    script_path: "repo://scripts/ci/validate-plan-format.js"
     script_args: "--project-root {{project_root}} --file {{project_root}}/plans/test-plan.md --markdown"
     project_root: "file://fixtures-fs/project-valid-plan"
   assert:
@@ -32,7 +32,7 @@
 
 - description: "plan-format: missing Verification header triggers PF1 fail"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-plan-format.js"
+    script_path: "repo://scripts/ci/validate-plan-format.js"
     script_args: "--project-root {{project_root}} --file {{project_root}}/plans/bad-plan.md --json"
     project_root: "file://fixtures-fs/project-invalid-plan"
   assert:
@@ -45,7 +45,7 @@
 
 - description: "plan-format: non-contiguous numbering triggers PF2 fail"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-plan-format.js"
+    script_path: "repo://scripts/ci/validate-plan-format.js"
     script_args: "--project-root {{project_root}} --file {{project_root}}/plans/bad-plan.md --json"
     project_root: "file://fixtures-fs/project-invalid-plan"
   assert:
@@ -56,7 +56,7 @@
 
 - description: "plan-format: invalid Complexity value triggers PF3 fail"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-plan-format.js"
+    script_path: "repo://scripts/ci/validate-plan-format.js"
     script_args: "--project-root {{project_root}} --file {{project_root}}/plans/bad-plan.md --json"
     project_root: "file://fixtures-fs/project-invalid-plan"
   assert:
@@ -67,7 +67,7 @@
 
 - description: "plan-format: invalid dependency triggers PF4 fail"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-plan-format.js"
+    script_path: "repo://scripts/ci/validate-plan-format.js"
     script_args: "--project-root {{project_root}} --file {{project_root}}/plans/bad-plan.md --json"
     project_root: "file://fixtures-fs/project-invalid-plan"
   assert:
@@ -78,7 +78,7 @@
 
 - description: "plan-format: missing checkbox triggers PF5 fail"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-plan-format.js"
+    script_path: "repo://scripts/ci/validate-plan-format.js"
     script_args: "--project-root {{project_root}} --file {{project_root}}/plans/bad-plan.md --json"
     project_root: "file://fixtures-fs/project-invalid-plan"
   assert:

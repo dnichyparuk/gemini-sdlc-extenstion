@@ -10,7 +10,7 @@
 
 - description: "jira-prepare: fresh install — exists=false, flags echoed"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-multi-project-config"
@@ -27,7 +27,7 @@
 
 - description: "jira-prepare: legacy .sdlc/jira-cache migration — emits warning, populates home layout"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-cache-legacy-sdlc"
@@ -42,7 +42,7 @@
 
 - description: "jira-prepare: legacy .claude/jira-cache migration — emits warning, populates home layout"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-cache-legacy-claude"
@@ -55,7 +55,7 @@
 
 - description: "jira-prepare: multi-candidate — returns candidateSites when same key under two sites"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-cache-home-multi-site"
@@ -75,7 +75,7 @@
 
 - description: "jira-prepare: --skip-workflow-discovery echoes in flags block"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-multi-project-config"
@@ -88,7 +88,7 @@
 
 - description: "jira-prepare: --project rejected when not in jira.projects"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-multi-project-config"
@@ -99,7 +99,7 @@
 
 - description: "jira-prepare: --project accepted when it is in jira.projects"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-multi-project-config"
@@ -112,7 +112,7 @@
 
 - description: "jira-prepare: --site disambiguates multi-candidate to a single cache"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-cache-home-multi-site"
@@ -127,7 +127,7 @@
 
 - description: "jira-prepare: --check finds cache at home-cache layout after --save (pre-seeded fixture)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-save-roundtrip"
@@ -147,7 +147,7 @@
 
 - description: "jira.js --validate-body: clean atlassian URL with cache-resolved site passes"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_args: "--validate-body --project PROJ --file {{project_root}}/body-clean.txt --json"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
@@ -159,7 +159,7 @@
 
 - description: "jira.js --validate-body: wrong-host atlassian URL aborts with atlassian-site-mismatch"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_args: "--validate-body --project PROJ --file {{project_root}}/body-atlassian-mismatch.txt --json"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
@@ -177,7 +177,7 @@
 
 - description: "jira.js --validate-body: wrong-owner github URL embedded in jira description aborts"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_args: "--validate-body --project PROJ --file {{project_root}}/body-github-mismatch.txt --json"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
@@ -193,7 +193,7 @@
 
 - description: "jira.js --validate-body: generic 404 URL aborts with url-not-found"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_args: "--validate-body --project PROJ --file {{project_root}}/body-generic-404.txt --json"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
@@ -208,11 +208,11 @@
 
 - description: "jira-prepare: --templates surfaces fallbacks (Sub-bug -> Bug, Subtask -> Task) and noneTypes (Whim)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-template-fallback"
-    script_args: "--project FALL --templates --templates-dir {{repo_root}}/plugins/sdlc-utilities/skills/jira-sdlc/templates"
+    script_args: "--project FALL --templates --templates-dir {{repo_root}}/skills/jira-sdlc/templates"
   assert:
     - type: icontains
       value: '"fallbackTo": "Bug"'
@@ -229,11 +229,11 @@
 
 - description: "jira-prepare: --check surfaces templates.fallbacks for unmapped subtask variants"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/jira.js"
+    script_path: "repo://scripts/skill/jira.js"
     script_cwd: "{{project_root}}"
     script_home: "{{project_root}}"
     project_root: "file://fixtures-fs/jira-template-fallback"
-    script_args: "--project FALL --check --templates-dir {{repo_root}}/plugins/sdlc-utilities/skills/jira-sdlc/templates"
+    script_args: "--project FALL --check --templates-dir {{repo_root}}/skills/jira-sdlc/templates"
   assert:
     - type: icontains
       value: '"fallbacks":'

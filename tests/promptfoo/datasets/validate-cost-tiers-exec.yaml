@@ -1,10 +1,10 @@
-# Script execution tests for plugins/sdlc-utilities/scripts/ci/validate-cost-tiers.js (#229).
+# Script execution tests for scripts/ci/validate-cost-tiers.js (#229).
 # Verifies the validator exits 0 against a clean fixture and exits 1 with a DRIFT
 # line against a fixture whose frontmatter disagrees with docs/cost-tiers.md.
 
 - description: "validate-cost-tiers: clean fixture exits 0"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-cost-tiers.js"
+    script_path: "repo://scripts/ci/validate-cost-tiers.js"
     script_args: "--root {{project_root}}"
     project_root: "file://fixtures-fs/cost-tiers-clean"
   assert:
@@ -18,7 +18,7 @@
 
 - description: "validate-cost-tiers: drift fixture exits 1 with DRIFT line"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/ci/validate-cost-tiers.js"
+    script_path: "repo://scripts/ci/validate-cost-tiers.js"
     script_args: "--root {{project_root}}"
     project_root: "file://fixtures-fs/cost-tiers-drift"
   assert:

@@ -4,7 +4,7 @@
 
 - description: "openspec-enrich: appends managed block to plain config"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/openspec-enrich.js"
+    script_path: "repo://scripts/util/openspec-enrich.js"
     script_args: "--project-root {{project_root}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-openspec-config-plain"
@@ -18,7 +18,7 @@
 
 - description: "openspec-enrich: unchanged on already-enriched v2 config"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/openspec-enrich.js"
+    script_path: "repo://scripts/util/openspec-enrich.js"
     script_args: "--project-root {{project_root}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-openspec-config-enriched-v2"
@@ -30,7 +30,7 @@
 
 - description: "openspec-enrich: updates v0 block to current version"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/openspec-enrich.js"
+    script_path: "repo://scripts/util/openspec-enrich.js"
     script_args: "--project-root {{project_root}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-openspec-config-enriched-v0"
@@ -42,7 +42,7 @@
 
 - description: "openspec-enrich: updates v1 block (now legacy comment-only) to v2"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/openspec-enrich.js"
+    script_path: "repo://scripts/util/openspec-enrich.js"
     script_args: "--project-root {{project_root}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-openspec-config-enriched-v1"
@@ -54,7 +54,7 @@
 
 - description: "openspec-enrich: skips append when existing context: key present"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/openspec-enrich.js"
+    script_path: "repo://scripts/util/openspec-enrich.js"
     script_args: "--project-root {{project_root}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-openspec-config-with-context-key"
@@ -70,7 +70,7 @@
 
 - description: "openspec-enrich: --remove removes block from enriched config"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/openspec-enrich.js"
+    script_path: "repo://scripts/util/openspec-enrich.js"
     script_args: "--remove --project-root {{project_root}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-openspec-config-enriched-v1"
@@ -80,7 +80,7 @@
 
 - description: "openspec-enrich: missing config returns error"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/openspec-enrich.js"
+    script_path: "repo://scripts/util/openspec-enrich.js"
     script_args: "--project-root {{project_root}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-setup-empty"

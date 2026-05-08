@@ -8,7 +8,7 @@
 #
 # Fixture appropriateness:
 #   resolution-installed-only -- CORRECT: script only under ~/.claude/plugins
-#   resolution-dev-only       -- CORRECT: script only under plugins/sdlc-utilities/scripts/
+#   resolution-dev-only       -- CORRECT: script only under scripts/
 #   resolution-both           -- CORRECT: both paths present; installed must win
 #   resolution-neither        -- CORRECT: neither path exists; must produce error
 
@@ -42,7 +42,7 @@
       value: '"source":"local"'
     # Resolved path must reference the local scripts directory
     - type: icontains
-      value: "plugins/sdlc-utilities/scripts"
+      value: "scripts"
     # Must NOT be installed
     - type: not-icontains
       value: '"source":"installed"'
@@ -82,7 +82,7 @@
     - type: not-icontains
       value: ".claude/plugins"
     - type: not-icontains
-      value: "plugins/sdlc-utilities/scripts"
+      value: "scripts"
 
 # Multi-version regression (#258): when ~/.claude/plugins/cache/ contains two cached
 # plugin versions, the resolution pattern must select the newest semver, not an

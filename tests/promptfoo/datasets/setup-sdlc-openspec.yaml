@@ -3,7 +3,7 @@
 
 - description: "setup-sdlc: --openspec-enrich invokes sub-script and reports result"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/openspec-config-plain.md"
     user_request: >
       Run /setup-sdlc --openspec-enrich. The project has openspec/config.yaml without a
@@ -21,7 +21,7 @@
 
 - description: "setup-sdlc: full-interactive offers enrichment when openspec detected"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/openspec-config-plain.md"
     user_request: >
       Run /setup-sdlc (no flags). The prepare script output includes openspecConfig:
@@ -40,7 +40,7 @@
 
 - description: "setup-sdlc: already-enriched config shows unchanged in sub-flow"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/openspec-config-enriched.md"
     user_request: >
       Run /setup-sdlc --openspec-enrich. The project has openspec/config.yaml with a managed
@@ -57,7 +57,7 @@
 
 - description: "setup-sdlc: no openspec hides enrichment from content menu"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/plan-execution-complete.md"
     user_request: >
       Run /setup-sdlc (no flags). The prepare script output includes openspecConfig:

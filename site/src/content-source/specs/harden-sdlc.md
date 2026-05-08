@@ -36,7 +36,7 @@
 - R9: When classification is `plugin-defect`, the orchestrator MUST set `routeToErrorReport=true`, populate `errorReportPayload` with the suggested `--skill / --step / --operation / --error-text` for `error-report-sdlc`, and emit an empty `proposals` array. The SKILL.md MUST then dispatch `error-report-sdlc` instead of editing any user-side surface.
 - R10: Severity vocabulary MUST be preserved per destination surface — sdlc.json guardrails use `error|warning`; review-dimensions use `critical|high|medium|low|info` (per `lib/dimensions.js::VALID_SEVERITIES`). Proposals must use the destination surface's vocabulary, never substitute one for the other.
 - R11: The skill MUST support both standalone invocation (`/harden-sdlc --failure-text "…" --skill plan-sdlc`) and caller-dispatched invocation (Skill-tool dispatch from `plan-sdlc`, `execute-plan-sdlc`, `review-sdlc`, `commit-sdlc`); pipeline state (ship-sdlc paused state, execute-plan-sdlc state file) is optional context and absent values MUST NOT block execution.
-- R12: Any proposed edit to `.sdlc/config.json` MUST be validated against `schemas/sdlc-config.schema.json` via `plugins/sdlc-utilities/scripts/ci/validate-guardrails.js` before write. Validation failure MUST surface the validator error to the user and offer retry-or-cancel — never silent commit.
+- R12: Any proposed edit to `.sdlc/config.json` MUST be validated against `schemas/sdlc-config.schema.json` via `scripts/ci/validate-guardrails.js` before write. Validation failure MUST surface the validator error to the user and offer retry-or-cancel — never silent commit.
 - R13: Prepare script output is the single authoritative source for all contracted fields (P-fields) — script-provided values take unconditional precedence over skill-generated content, and all factual context (config, surface contents, sibling-skill paths, repo state) must originate from script output to ensure deterministic behavior.
 - R-config-version (issue #232): The prepare script `skill/harden-prepare.js` MUST call `verifyAndMigrate(projectRoot, 'project')` at start. The call is short-circuited when CLI `--skip-config-check` OR env `SDLC_SKIP_CONFIG_CHECK=1` is present; both gates resolve into a single `flags.skipConfigCheck` boolean in the prepare output (CLI > env > default false). On migration failure the prepare emits non-zero exit and an `errors[]` entry naming the failing step; SKILL.md halts with that text verbatim.
   - Acceptance: prepare output includes `flags.skipConfigCheck` and a `migration` block (or null when skipped); SKILL.md gates further work on `errors.length === 0`.
@@ -58,7 +58,7 @@
 
 - G1: Proposal coherence — every emitted proposal MUST cite a specific failure-signal element (a guardrail id, a dimension name, a copilot pattern, or a verbatim phrase from `failure.text`) in its `rationale`
 - G2: Surface coverage — when failure signal is non-empty, the orchestrator MUST evaluate every loaded surface (skip is acceptable but must be intentional, not omission)
-- G3: Classification accuracy — `classification` MUST match observable evidence; `plugin-defect` requires the failure to point at plugin code (script crash inside `plugins/sdlc-utilities/`, agent malformed JSON, prepare-script exit 2), not user-code or config
+- G3: Classification accuracy — `classification` MUST match observable evidence; `plugin-defect` requires the failure to point at plugin code (script crash inside ``, agent malformed JSON, prepare-script exit 2), not user-code or config
 - G4: No-silent-write invariant — across all paths (success, cancel, agent crash, validation fail) the count of files written without an `apply` AskUserQuestion answer MUST be zero
 
 ## Prepare Script Contract
@@ -103,7 +103,7 @@
 
 - I1: Caller-skill dispatch contract — `plan-sdlc`, `execute-plan-sdlc`, `review-sdlc`, `commit-sdlc` each present an opt-in menu option that dispatches `Skill(harden-sdlc)` with `--failure-text`, `--skill`, `--step`, `--operation` (and optionally `--exit-code`). Canonical menu wording is shared across callers per `cross-skill-consistency` and `no-opposite-logical-vectors` guardrails.
 - I2: `error-report-sdlc` handoff — when `classification == "plugin-defect"`, harden-sdlc dispatches `error-report-sdlc` instead of editing user-side surfaces; the orchestrator-supplied `errorReportPayload` carries `--skill / --step / --operation / --error-text` ready to forward.
-- I3: `schemas/sdlc-config.schema.json` validation — proposed sdlc.json edits MUST pass `plugins/sdlc-utilities/scripts/ci/validate-guardrails.js` (canonical validator) before write; review-dimension edits MUST pass `schemas/review-dimension.schema.json`.
+- I3: `schemas/sdlc-config.schema.json` validation — proposed sdlc.json edits MUST pass `scripts/ci/validate-guardrails.js` (canonical validator) before write; review-dimension edits MUST pass `schemas/review-dimension.schema.json`.
 - I4: Session-start state — paused ship-sdlc state file (`.sdlc/execution/ship-*.json`) and execute-plan-sdlc state file (`.sdlc/execution/execute-*.json`) are optional context for the manifest; harden-sdlc reads these files when present but does not require them. `ship-sdlc` is intentionally NOT a caller — it delegates failure handling to its sub-skills, and harden-sdlc reaches the user through whichever sub-skill failed.
 
 ## Source

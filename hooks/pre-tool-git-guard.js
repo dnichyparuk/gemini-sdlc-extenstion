@@ -32,7 +32,7 @@ const fs = require('node:fs');
 
 let input = {};
 try {
-  const raw = fs.readFileSync('/dev/stdin', 'utf8');
+  const raw = fs.readFileSync(0, 'utf8');
   if (raw.trim()) {
     input = JSON.parse(raw);
   }

@@ -14,7 +14,7 @@
 
 - description: "guardrails-prepare: middy-http deps trigger lambda-http API detection"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-lambda-middy-http"
   assert:
@@ -25,7 +25,7 @@
 
 - description: "guardrails-prepare: serverless dir triggers serverless API detection"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-serverless-dynamodb"
   assert:
@@ -36,7 +36,7 @@
 
 - description: "guardrails-prepare: middy core alone does NOT trigger API detection (negative)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-lambda-worker-no-api"
   assert:
@@ -45,7 +45,7 @@
 
 - description: "guardrails-prepare: handler file in src/function/ triggers lambda-http"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-lambda-middy-http"
   assert:
@@ -59,7 +59,7 @@
 
 - description: "guardrails-prepare: DynamoDB SDK triggers dynamodb database detection"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-serverless-dynamodb"
   assert:
@@ -70,7 +70,7 @@
 
 - description: "guardrails-prepare: mongoose triggers mongodb database detection"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-mongodb-express"
   assert:
@@ -81,7 +81,7 @@
 
 - description: "guardrails-prepare: ioredis triggers redis database detection"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-cdk-redis"
   assert:
@@ -94,7 +94,7 @@
 
 - description: "guardrails-prepare: @middy/ prefix triggers middy framework detection"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-lambda-middy-http"
   assert:
@@ -105,7 +105,7 @@
 
 - description: "guardrails-prepare: zod, sentry, datadog, esbuild detected as frameworks"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-validation-observability"
   assert:
@@ -120,7 +120,7 @@
 
 - description: "guardrails-prepare: aws-cdk-lib triggers aws-cdk framework detection"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-cdk-redis"
   assert:
@@ -129,7 +129,7 @@
 
 - description: "guardrails-prepare: serverless in devDeps triggers serverless-framework detection"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-serverless-dynamodb"
   assert:
@@ -140,7 +140,7 @@
 
 - description: "guardrails-prepare: express + routes still triggers rest API (regression)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-mongodb-express"
   assert:
@@ -155,7 +155,7 @@
 
 - description: "guardrails-prepare: discovers dimensions at .sdlc/review-dimensions/ (issue #259)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-with-sdlc-dimensions"
   assert:
@@ -166,7 +166,7 @@
 
 - description: "guardrails-prepare: still discovers dimensions at legacy .claude/review-dimensions/ via deprecation fallback (regression)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}}"
     project_root: "file://fixtures-fs/project-with-dimensions"
   assert:
@@ -179,7 +179,7 @@
 
 - description: "guardrails-prepare planning-discipline: --target plan emits all five new IDs"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}} --target plan"
     project_root: "file://fixtures-fs/project-mongodb-express"
   assert:
@@ -196,7 +196,7 @@
 
 - description: "guardrails-prepare planning-discipline: --target execute omits all five IDs"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}} --target execute"
     project_root: "file://fixtures-fs/project-mongodb-express"
   assert:
@@ -213,7 +213,7 @@
 
 - description: "guardrails-prepare planning-discipline: state-premise and ambiguity-stops-and-asks are severity error"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}} --target plan"
     project_root: "file://fixtures-fs/project-mongodb-express"
   assert:
@@ -222,7 +222,7 @@
 
 - description: "guardrails-prepare planning-discipline: failure-audience, explicit-non-goals, smallest-viable-cut are severity warning"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}} --target plan"
     project_root: "file://fixtures-fs/project-mongodb-express"
   assert:
@@ -231,7 +231,7 @@
 
 - description: "guardrails-prepare planning-discipline: all five entries have category planning-discipline"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/guardrails.js"
+    script_path: "repo://scripts/skill/guardrails.js"
     script_args: "--project-root {{project_root}} --target plan"
     project_root: "file://fixtures-fs/project-mongodb-express"
   assert:

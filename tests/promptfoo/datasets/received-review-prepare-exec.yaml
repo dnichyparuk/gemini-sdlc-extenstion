@@ -1,7 +1,7 @@
 # Script execution tests for the received-review-sdlc flag-resolution path
 # (issue #233, R18/R19). These run the test harness
 # tests/promptfoo/scripts/run-received-review-flag-resolve.js — which mirrors
-# the resolution logic in plugins/sdlc-utilities/scripts/skill/received-review.js
+# the resolution logic in scripts/skill/received-review.js
 # without invoking the gh API — against fixture-fs directories.
 #
 # Plus a structural schema-rejection assertion: the project schema must NOT

@@ -187,7 +187,7 @@ The plan format is identical regardless of mode, so `/execute-plan-sdlc` loads i
 | `<plansDirectory>/YYYY-MM-DD-<feature-name>.md` | The written plan document (normal mode). Starts as a skeleton header at Step 0 and grows incrementally: header fields and Requirements section added at Step 1, task blocks at Step 2, critique fixes applied at Steps 4 and 6. Path resolved from: user-specified → project `.claude/settings.json` `plansDirectory` → global `~/.claude/settings.json` `plansDirectory` → `~/.claude/plans/` fallback. |
 | Plan mode designated file | When Claude Code plan mode is active, the plan is written to the system-designated file path instead of the above. Same incremental build process applies. The path appears in the plan mode system banner. |
 | `.sdlc/learnings/log.md` | Planning learnings appended after writing: scope decisions, clarification patterns, decomposition issues. |
-| Step 7 context-heaviness advisory | When the latest transcript stats sidecar at `$TMPDIR/sdlc-context-stats.json` indicates `heavy: true` (transcript ≥60% of model budget), Step 7 prepends a `/compact` advisory above the handoff menu. Sidecar is written by the `UserPromptSubmit` hook `hooks/context-stats.js`. Implementation: [`scripts/lib/context-advisory.js`](../../plugins/sdlc-utilities/scripts/lib/context-advisory.js) consumed via the wrapper [`scripts/skill/plan-handoff-advisory.js`](../../plugins/sdlc-utilities/scripts/skill/plan-handoff-advisory.js). Pipeline state survives `/compact` (PreCompact + SessionStart hooks). |
+| Step 7 context-heaviness advisory | When the latest transcript stats sidecar at `$TMPDIR/sdlc-context-stats.json` indicates `heavy: true` (transcript ≥60% of model budget), Step 7 prepends a `/compact` advisory above the handoff menu. Sidecar is written by the `UserPromptSubmit` hook `hooks/context-stats.js`. Implementation: [`scripts/lib/context-advisory.js`](../../scripts/lib/context-advisory.js) consumed via the wrapper [`scripts/skill/plan-handoff-advisory.js`](../../scripts/skill/plan-handoff-advisory.js). Pipeline state survives `/compact` (PreCompact + SessionStart hooks). |
 
 ## Plan Integrity
 
@@ -202,7 +202,7 @@ When `plan-sdlc` runs, it writes a per-branch plan integrity state file at `.sdl
 
 A sibling field `planFilePath` stores the absolute path to the plan file so the hook can stat it for non-empty content.
 
-The `stop-plan-integrity.js` Stop hook reads this state file at session end and warns when any checkpoint is missing or when the recorded plan file is absent or empty. If no state file exists but the transcript shows plan mode was active, the hook warns that `plan-sdlc` was not invoked. The hook is advisory-only and always exits 0. See [`hooks/stop-plan-integrity.js`](../../plugins/sdlc-utilities/hooks/stop-plan-integrity.js) and [issue #285](https://github.com/rnagrodzki/sdlc-marketplace/issues/285).
+The `stop-plan-integrity.js` Stop hook reads this state file at session end and warns when any checkpoint is missing or when the recorded plan file is absent or empty. If no state file exists but the transcript shows plan mode was active, the hook warns that `plan-sdlc` was not invoked. The hook is advisory-only and always exits 0. See [`hooks/stop-plan-integrity.js`](../../hooks/stop-plan-integrity.js) and [issue #285](https://github.com/rnagrodzki/sdlc-marketplace/issues/285).
 
 ---
 

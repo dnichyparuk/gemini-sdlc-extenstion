@@ -2,7 +2,7 @@
 name: release-consistency
 description: "Reviews version and changelog changes for consistency across plugin.json, CHANGELOG.md, version.json, and git tag references"
 triggers:
-  - "plugins/sdlc-utilities/.claude-plugin/plugin.json"
+  - ".claude-plugin/plugin.json"
   - "CHANGELOG.md"
   - ".claude/version.json"
   - ".claude-plugin/marketplace.json"

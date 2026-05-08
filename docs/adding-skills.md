@@ -158,7 +158,7 @@ When invoking `error-report-sdlc`, provide:
 # then retry with cwd. If found, follow the procedure. If not found, skip.
 ```
 
-See `plugins/sdlc-utilities/skills/pr-sdlc/SKILL.md` for a complete example.
+See `skills/pr-sdlc/SKILL.md` for a complete example.
 
 ---
 

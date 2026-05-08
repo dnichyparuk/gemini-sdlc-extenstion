@@ -1,10 +1,10 @@
-# Script execution tests for plugins/sdlc-utilities/scripts/skill/version.js.
+# Script execution tests for scripts/skill/version.js.
 # Covers: --output-file flag declaration (#212) and resolved flags.changelog (#213).
 # These tests run version.js directly against fixture directories (no LLM).
 
 - description: "version-prepare: patch bump produces no 'Unknown flag' warnings (#212)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/version.js"
+    script_path: "repo://scripts/skill/version.js"
     script_args: "patch"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/version-sdlc-config-changelog"
@@ -18,7 +18,7 @@
 
 - description: "version-prepare: config.changelog=true with no --changelog flag emits flags.changelog=true (#213)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/version.js"
+    script_path: "repo://scripts/skill/version.js"
     script_args: "patch"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/version-sdlc-config-changelog"
@@ -35,7 +35,7 @@
 
 - description: "version-prepare: config.changelog=false with --changelog flag still emits flags.changelog=true (#213)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/version.js"
+    script_path: "repo://scripts/skill/version.js"
     script_args: "patch --changelog"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/version-sdlc-plugin-json-multifield"
@@ -46,7 +46,7 @@
 
 - description: "version-prepare: neither config.changelog nor --changelog emits flags.changelog=false (#213)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/version.js"
+    script_path: "repo://scripts/skill/version.js"
     script_args: "patch"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/version-sdlc-plugin-json-multifield"
@@ -57,7 +57,7 @@
 
 - description: "version-prepare: patch --auto with config.changelog=true emits flags.changelog=true (#219, regression net for #213)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/version.js"
+    script_path: "repo://scripts/skill/version.js"
     script_args: "patch --auto"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/version-sdlc-config-changelog"

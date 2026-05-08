@@ -10,7 +10,7 @@ Default severity: high
 ## Checklist
 
 ### 1:1 existence checks
-- Every skill directory under `plugins/sdlc-utilities/skills/<name>/` has a matching `docs/skills/<name>.md`
+- Every skill directory under `skills/<name>/` has a matching `docs/skills/<name>.md`
 - Every user-invocable skill has a row in the `README.md` Skills table
 - Every user-invocable skill has an entry in `site/src/data/skills-meta.ts` `skillsMeta` array with matching `slug`
 

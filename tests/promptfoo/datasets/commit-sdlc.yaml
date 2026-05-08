@@ -3,7 +3,7 @@
 
 - description: "commit-sdlc: shows workflow continuation menu after commit"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    skill_path: "skills/commit-sdlc/SKILL.md"
     project_context: "file://fixtures/commit-staged-changes.md"
     user_request: >
       Run /commit-sdlc. The commit has been created successfully — Step 6 verification
@@ -31,7 +31,7 @@
 
 - description: "commit-sdlc: --auto flag skips interactive approval prompt"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    skill_path: "skills/commit-sdlc/SKILL.md"
     project_context: "file://fixtures/commit-staged-changes.md"
     user_request: >
       Run /commit-sdlc --auto. The commit-prepare.js output is provided in the project
@@ -55,7 +55,7 @@
 
 - description: "commit-sdlc: enforces type constraint from config"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    skill_path: "skills/commit-sdlc/SKILL.md"
     project_context: "file://fixtures/commit-config-present.md"
     user_request: >
       Run /commit-sdlc. The commit-prepare.js output includes commitConfig with
@@ -78,7 +78,7 @@
 
 - description: "commit-sdlc: validates subject against pattern from config"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    skill_path: "skills/commit-sdlc/SKILL.md"
     project_context: "file://fixtures/commit-config-present.md"
     user_request: >
       Run /commit-sdlc. The project config contains subjectPattern:
@@ -101,7 +101,7 @@
 
 - description: "commit-sdlc: enforces required trailers from config"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    skill_path: "skills/commit-sdlc/SKILL.md"
     project_context: "file://fixtures/commit-config-present.md"
     user_request: >
       Run /commit-sdlc. The commitConfig specifies requiredTrailers: [Reviewed-by].
@@ -121,7 +121,7 @@
 
 - description: "commit-sdlc: generates accurate message from truncated diff"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    skill_path: "skills/commit-sdlc/SKILL.md"
     project_context: "file://fixtures/commit-large-diff-truncated.md"
     user_request: >
       Run /commit-sdlc. The commit-prepare.js output is provided in the project
@@ -145,7 +145,7 @@
 
 - description: "commit-sdlc: link verification (R12, #198) — invokes script gate before git commit"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    skill_path: "skills/commit-sdlc/SKILL.md"
     project_context: "file://fixtures/commit-staged-changes.md"
     user_request: >
       Run /commit-sdlc on a body that references https://github.com/rafalnagr/sdlc-marketplace/issues/190
@@ -161,7 +161,7 @@
       value: "git commit"
     - type: llm-rubric
       value: >
-        The response describes invoking plugins/sdlc-utilities/scripts/lib/links.js as a hard gate
+        The response describes invoking scripts/lib/links.js as a hard gate
         before git commit, pipes the message body through it, and explicitly states that on non-zero
         exit the commit must NOT be executed. It does not describe LLM-side validation logic. It does
         not propose retrying, editing URLs without user input, or bypassing the gate. The gate is
@@ -169,7 +169,7 @@
 
 - description: "commit-sdlc: trap cleanup fires on pre-commit hook failure (issue #209)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    skill_path: "skills/commit-sdlc/SKILL.md"
     project_context: "file://fixtures/commit-staged-changes.md"
     user_request: >
       Run /commit-sdlc. The pre-commit hook fails (lint error). Walk through what happens

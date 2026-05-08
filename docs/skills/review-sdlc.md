@@ -188,7 +188,7 @@ User-supplied `command` parameter is passed directly to `child_process.exec()` w
 
 ## OWASP Top 10 metadata
 
-Findings produced by an OWASP-aware dimension carry an optional `**OWASP:**` field (`A01`–`A10`) that names the matching category. The field is opt-in per dimension — only dimensions whose body explicitly instructs OWASP tagging populate it (the bundled `security-review` example does, see [`EXAMPLES.md`](../../plugins/sdlc-utilities/skills/review-sdlc/EXAMPLES.md#security-reviewmd)). Other dimensions omit the field and their findings render unchanged.
+Findings produced by an OWASP-aware dimension carry an optional `**OWASP:**` field (`A01`–`A10`) that names the matching category. The field is opt-in per dimension — only dimensions whose body explicitly instructs OWASP tagging populate it (the bundled `security-review` example does, see [`EXAMPLES.md`](../../skills/review-sdlc/EXAMPLES.md#security-reviewmd)). Other dimensions omit the field and their findings render unchanged.
 
 When the field is present, it renders in the consolidated comment as a suffix on the file line:
 

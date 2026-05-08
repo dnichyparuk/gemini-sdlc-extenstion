@@ -3,7 +3,7 @@
  * run-received-review-flag-resolve.js
  * Test harness that exercises the received-review-sdlc flag-resolution path
  * (issue #233) without invoking gh API. Mirrors the resolution logic from
- * `plugins/sdlc-utilities/scripts/skill/received-review.js`:
+ * `scripts/skill/received-review.js`:
  *
  *   1. Detect `receivedReview.alwaysFixSeverities` misplaced in
  *      `.sdlc/config.json` → emit one stderr warning.

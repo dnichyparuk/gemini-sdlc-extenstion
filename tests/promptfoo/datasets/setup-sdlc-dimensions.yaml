@@ -6,7 +6,7 @@
 
 - description: "setup-sdlc --dimensions: scans tech stack and proposes tailored dimensions"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-tech-stack.md"
     user_request: "Run /setup-sdlc --dimensions to scan this project and propose review dimensions."
   assert:
@@ -34,7 +34,7 @@
 
 - description: "setup-sdlc --dimensions: monorepo with CI/CD gets extended dimension proposals"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-cicd-monorepo.md"
     user_request: "Run /setup-sdlc --dimensions to scan this project and propose review dimensions."
   assert:
@@ -67,7 +67,7 @@
 
 - description: "setup-sdlc --dimensions: Python/FastAPI project gets appropriate proposals"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-no-dimensions.md"
     user_request: "Run /setup-sdlc --dimensions for this project."
   assert:
@@ -93,7 +93,7 @@
 
 - description: "setup-sdlc --dimensions: shows workflow continuation menu after dimension setup"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/review-dimensions-created.md"
     user_request: >
       Run /setup-sdlc --dimensions. The review dimensions have been created — 3 dimension
@@ -119,7 +119,7 @@
 
 - description: "setup-sdlc --dimensions: --add mode proposes only new dimensions, acknowledges existing"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-dimensions-add-mode.md"
     user_request: >
       Run /setup-sdlc --dimensions --add on this project. The project already has code-quality-review
@@ -143,7 +143,7 @@
 
 - description: "setup-sdlc --dimensions: validation failure shows errors and offers to fix"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-invalid-dimension.md"
     user_request: >
       I ran /setup-sdlc --dimensions and the dimensions were created, but validation failed.
@@ -166,7 +166,7 @@
 
 - description: "setup-sdlc --dimensions: minimal project still gets baseline dimension proposal"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-empty-signals.md"
     user_request: >
       Run /setup-sdlc --dimensions on this project. It's a very minimal project with just a
@@ -189,7 +189,7 @@
 
 - description: "setup-sdlc --dimensions: --no-copilot skips GitHub Copilot instructions step"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-tech-stack.md"
     user_request: >
       Run /setup-sdlc --dimensions --no-copilot on this project. Scan the tech stack and
@@ -209,7 +209,7 @@
 
 - description: "setup-sdlc --dimensions: does not exit plan mode or change permissions during file writes"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-tech-stack.md"
     user_request: >
       Run /setup-sdlc --dimensions on this project. Write the dimension files.

@@ -3,7 +3,7 @@
 
 - description: "verify-pipeline-sdlc: lint failure under --auto applies in-place fix"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/verify-pipeline-sdlc/SKILL.md"
+    skill_path: "skills/verify-pipeline-sdlc/SKILL.md"
     user_request: >
       The user invoked /verify-pipeline-sdlc --pr 142 --auto with --logs containing
       "eslint found 3 errors: missing semicolon at src/foo.ts:42, no-unused-vars at
@@ -22,7 +22,7 @@
 
 - description: "verify-pipeline-sdlc: build-error always emits proposal (never auto-applies)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/verify-pipeline-sdlc/SKILL.md"
+    skill_path: "skills/verify-pipeline-sdlc/SKILL.md"
     user_request: >
       The user invoked /verify-pipeline-sdlc --pr 142 --auto with --logs containing
       "Cannot find module 'react-router-dom' from src/App.tsx". Walk through what
@@ -37,7 +37,7 @@
 
 - description: "verify-pipeline-sdlc: interactive (no --auto) emits proposal regardless of category"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/verify-pipeline-sdlc/SKILL.md"
+    skill_path: "skills/verify-pipeline-sdlc/SKILL.md"
     user_request: >
       The user invoked /verify-pipeline-sdlc --pr 142 (no --auto) with logs showing
       a single eslint missing-semicolon error. The skill should NOT auto-apply.
@@ -50,7 +50,7 @@
 
 - description: "verify-pipeline-sdlc: missing both --pr and --logs aborts (E1)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/verify-pipeline-sdlc/SKILL.md"
+    skill_path: "skills/verify-pipeline-sdlc/SKILL.md"
     user_request: >
       The user invoked /verify-pipeline-sdlc with no arguments. Per spec E1, the
       skill must abort. Walk through.
@@ -62,7 +62,7 @@
 
 - description: "verify-pipeline-sdlc: emits exactly one JSON line on stdout (G1)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/verify-pipeline-sdlc/SKILL.md"
+    skill_path: "skills/verify-pipeline-sdlc/SKILL.md"
     user_request: >
       Describe Step 4 VERDICT — what is emitted on stdout, what goes to stderr,
       and why the contract requires a single JSON line.
@@ -76,7 +76,7 @@
 
 - description: "verify-pipeline-sdlc: must NOT commit or push (R7, C1)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/verify-pipeline-sdlc/SKILL.md"
+    skill_path: "skills/verify-pipeline-sdlc/SKILL.md"
     user_request: >
       What does the skill do AFTER applying a fix? Specifically — does it commit?
       push? Reference the relevant constraint.

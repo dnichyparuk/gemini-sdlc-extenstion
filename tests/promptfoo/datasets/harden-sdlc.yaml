@@ -8,7 +8,7 @@
 
 - description: "harden-sdlc: standalone invocation, plan-guardrail FAIL → proposes plan-guardrails strengthening"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: "file://fixtures/harden-plan-guardrail-failure-context.md"
     user_request: >
       The user invoked /harden-sdlc directly with --failure-text and --skill plan-sdlc
@@ -45,7 +45,7 @@
 
 - description: "harden-sdlc: dimension-blocker rationale → proposes review-dimensions strengthening with dimension severity vocabulary"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: "file://fixtures/harden-dimension-blocker-context.md"
     user_request: >
       The user dispatched /harden-sdlc from review-sdlc's Step 5 actionable-findings
@@ -74,7 +74,7 @@
 
 - description: "harden-sdlc: plugin-defect classification → routes to error-report-sdlc, no surface proposals"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: "file://fixtures/harden-plugin-defect-context.md"
     user_request: >
       The user invoked /harden-sdlc after harden-prepare.js itself crashed with exit
@@ -94,7 +94,7 @@
     - type: llm-rubric
       value: >
         The response classifies the failure as plugin-defect (script crash with exit
-        code 2 inside plugins/sdlc-utilities/). It explicitly skips Steps 4 and 5
+        code 2 inside ). It explicitly skips Steps 4 and 5
         (PRESENT and APPLY) because no user-side surface edit is appropriate for a
         plugin defect. It dispatches error-report-sdlc with the orchestrator-supplied
         payload (skill, step, operation, errorText, errorType=script crash). It
@@ -102,7 +102,7 @@
 
 - description: "harden-sdlc: missing --failure-text → exits with error, no execution"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: ""
     user_request: >
       The user invoked /harden-sdlc --skill plan-sdlc with no --failure-text flag.
@@ -115,7 +115,7 @@
 
 - description: "harden-sdlc: missing --skill → exits with error, no execution"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: ""
     user_request: >
       The user invoked /harden-sdlc --failure-text "something failed" with no
@@ -128,7 +128,7 @@
 
 - description: "harden-sdlc: empty surfaces → graceful degradation, classification still attempted"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: "file://fixtures/harden-plan-guardrail-failure-context.md"
     user_request: >
       Suppose the project has no .claude/sdlc.json, no review-dimensions/, and no
@@ -143,7 +143,7 @@
 
 - description: "harden-sdlc: user selects cancel at AskUserQuestion → no files written"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: "file://fixtures/harden-plan-guardrail-failure-context.md"
     user_request: >
       Walk through the harden-sdlc flow assuming the user selects "cancel" at the
@@ -158,7 +158,7 @@
 
 - description: "harden-sdlc: user applies one of two proposals → exactly one file written"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: "file://fixtures/harden-plan-guardrail-failure-context.md"
     user_request: >
       Two proposals are presented. The user selects "apply" on proposal 1 (a
@@ -173,7 +173,7 @@
 
 - description: "harden-sdlc: strengthen-only invariant — no relax/remove proposals"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: "file://fixtures/harden-plan-guardrail-failure-context.md"
     user_request: >
       Suppose the user describes the failure as "the no-auto-eval guardrail is too
@@ -189,7 +189,7 @@
 
 - description: "harden-sdlc: schema-invalid sdlc.json edit → validator error surfaced, no write"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/harden-sdlc/SKILL.md"
+    skill_path: "skills/harden-sdlc/SKILL.md"
     project_context: "file://fixtures/harden-plan-guardrail-failure-context.md"
     user_request: >
       Suppose the orchestrator proposes a guardrail addition that would fail the

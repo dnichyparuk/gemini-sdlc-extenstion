@@ -53,13 +53,10 @@ Blocking issues → stop and ask. Warnings only → show them and proceed.
 > **VERBATIM** — Run this bash block exactly as written.
 
 ```bash
-SCRIPT_DIR=$(find ~/.claude/plugins -name "config.js" -path "*/sdlc*/lib/config.js" 2>/dev/null | sort -V | tail -1 | xargs dirname 2>/dev/null)
-[ -z "$SCRIPT_DIR" ] && [ -f "plugins/sdlc-utilities/scripts/lib/config.js" ] && SCRIPT_DIR="plugins/sdlc-utilities/scripts/lib"
-[ -z "$SCRIPT_DIR" ] && { echo "[]"; exit 0; }
 node -e "
-const { readSection } = require('$SCRIPT_DIR/config.js');
+const { readSection } = require('./scripts/lib/config.js');
 try {
-  const advisory = require('$SCRIPT_DIR/context-advisory.js').getAdvisory({ skill: 'execute-plan-sdlc' });
+  const advisory = require('./scripts/lib/context-advisory.js').getAdvisory({ skill: 'execute-plan-sdlc' });
   if (advisory) process.stderr.write(advisory + '\n');
 } catch (_) { /* helper missing or sidecar unreadable — silent */ }
 const execute = readSection(process.cwd(), 'execute');
@@ -121,10 +118,10 @@ Note: this reads `execute.guardrails` (runtime enforcement), not `plan.guardrail
 
    - **If `--workspace worktree`:** Create worktree without prompting:
      ```bash
-     SCRIPT=$(find ~/.claude/plugins -name "worktree-create.js" -path "*/sdlc*/scripts/util/worktree-create.js" 2>/dev/null | sort -V | tail -1)
-     [ -z "$SCRIPT" ] && [ -f "plugins/sdlc-utilities/scripts/util/worktree-create.js" ] && SCRIPT="plugins/sdlc-utilities/scripts/util/worktree-create.js"
+     SCRIPT="scripts/util/worktree-create.js"
+     [ ! -f "$SCRIPT" ] && { echo "ERROR: Could not locate $SCRIPT. Is the sdlc extension installed?" >&2; exit 2; }
      result=$(node "$SCRIPT" --name <derived-name>)
-     cd $(echo "$result" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync('/dev/stdin','utf8')).path)")
+     cd $(echo "$result" | node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(0,'utf8')).path)")
      ```
      Print the branch and path from the script output. The branch may differ from the derived name if a collision suffix was added.
 

@@ -18,7 +18,7 @@
 
 - description: "state/ship.js gc --dry-run lists stale ship-* file with reason 'stale+branch-gone'"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/state/ship.js"
+    script_path: "repo://scripts/state/ship.js"
     script_args: "gc --dry-run --ttl-days 7"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-ship-state-stale"
@@ -39,7 +39,7 @@
 
 - description: "state/ship.js migrate --from main --to fix/220-foo returns migrated:true and renames file"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/state/ship.js"
+    script_path: "repo://scripts/state/ship.js"
     script_args: "migrate --from main --to fix/220-foo"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-ship-state-rename"
@@ -53,7 +53,7 @@
 
 - description: "state/ship.js migrate against missing slug returns migrated:false and exits 1"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/state/ship.js"
+    script_path: "repo://scripts/state/ship.js"
     script_args: "migrate --from doesnotexist --to other"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-ship-state-rename"
@@ -69,7 +69,7 @@
 
 - description: "state/execute.js gc deletes stale execute-* file whose branch is gone"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/state/execute.js"
+    script_path: "repo://scripts/state/execute.js"
     script_args: "gc --ttl-days 7"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-execute-state-stale"
@@ -85,7 +85,7 @@
 
 - description: "state/ship.js cleanup-pipeline --force preserves current run, sweeps stale orphans"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/state/ship.js"
+    script_path: "repo://scripts/state/ship.js"
     script_args: "cleanup-pipeline --force --ttl-days 7"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-ship-state-stale"
@@ -103,7 +103,7 @@
 
 - description: "skill/ship.js --gc returns action:gc with report and skips pipeline composition"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_path: "repo://scripts/skill/ship.js"
     script_args: "--output-file --gc --ttl-days 7"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-ship-state-stale"
@@ -119,7 +119,7 @@
 
 - description: "skill/ship.js rejects --steps cleanup as a reserved terminal step"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_path: "repo://scripts/skill/ship.js"
     script_args: "--has-plan --steps cleanup"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-ship-state-rename"
@@ -165,7 +165,7 @@
 
 - description: "state/ship.js init prunes pre-existing same-branch ship-* file (issue #255)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/state/ship.js"
+    script_path: "repo://scripts/state/ship.js"
     script_args: "init --branch main --flags {}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-ship-state-orphan"
@@ -181,7 +181,7 @@
 
 - description: "state/ship.js init with no pre-existing same-branch state file produces empty prunedOrphans (issue #255)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/state/ship.js"
+    script_path: "repo://scripts/state/ship.js"
     script_args: "init --branch main --flags {}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-execute-state-stale"

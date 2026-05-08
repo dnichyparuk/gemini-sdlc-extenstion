@@ -7,7 +7,7 @@
 
 - description: "pr-prepare: default flags with no args"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
   assert:
@@ -18,7 +18,7 @@
 
 - description: "pr-prepare: --draft flag"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--draft"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
@@ -28,7 +28,7 @@
 
 - description: "pr-prepare: --update flag"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--update"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
@@ -38,7 +38,7 @@
 
 - description: "pr-prepare: --base main override"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--base main"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
@@ -48,7 +48,7 @@
 
 - description: "pr-prepare: --auto flag"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--auto"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
@@ -58,7 +58,7 @@
 
 - description: "pr-prepare: --label bug --label feature adds both labels"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--label bug --label feature"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
@@ -70,7 +70,7 @@
 
 - description: "pr-prepare: --label bug --label bug deduplicates"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--label bug --label bug"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
@@ -80,7 +80,7 @@
 
 - description: "pr-prepare: config present includes prConfig"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-config"
   assert:
@@ -91,7 +91,7 @@
 
 - description: "pr-prepare: no config sets prConfig null"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
   assert:
@@ -104,7 +104,7 @@
 # produce its prepare output without throwing.
 - description: "pr-prepare: fetchBaseRef non-fatal when origin unreachable (issue #239)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/git-lib-unreachable-origin"
   assert:
@@ -122,7 +122,7 @@
 
 - description: "pr.js --validate-body: clean body with matching repo owner passes"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--validate-body --file {{project_root}}/body-clean.md --json"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-link-validate"
@@ -133,7 +133,7 @@
 
 - description: "pr.js --validate-body: wrong-owner github URL (PR #192 case) aborts with github-context-mismatch"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--validate-body --file {{project_root}}/body-wrong-owner.md --json"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-link-validate"
@@ -150,7 +150,7 @@
 
 - description: "pr.js --validate-body: generic 404 URL aborts with url-not-found"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--validate-body --file {{project_root}}/body-generic-404.md --json"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-link-validate"
@@ -162,7 +162,7 @@
 
 - description: "pr.js: --output-file writes to os.tmpdir() (issue #209 regression test)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_args: "--output-file"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
@@ -175,7 +175,7 @@
 
 - description: "pr.js: without --output-file, output is still a tmpdir path (stdout-JSON fallback removed)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-no-config"
     script_passthrough: true
@@ -191,7 +191,7 @@
 
 - description: "pr.js: template at .sdlc/pr-template.md is resolved (canonical, no warning)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-template-sdlc"
   assert:
@@ -200,7 +200,7 @@
 
 - description: "pr.js: template at .claude/pr-template.md (legacy only) emits one-time deprecation warning"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-template-claude-legacy"
     script_capture_stderr: true
@@ -212,7 +212,7 @@
 
 - description: "pr.js: with both templates present, .sdlc/ wins (no warning)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/skill/pr.js"
+    script_path: "repo://scripts/skill/pr.js"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-pr-template-both"
   assert:

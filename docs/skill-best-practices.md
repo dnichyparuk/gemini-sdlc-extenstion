@@ -416,7 +416,7 @@ This split-phase pattern keeps the main context clean while preserving user inte
 
 Pinning `model:` (e.g., `model: haiku`) in skill frontmatter does **not** create a fresh context. The harness routes the skill into a subagent that inherits the entire parent conversation transcript. On long sessions this overflows the smaller-window models and the skill aborts with `Context limit reached` (issue #202).
 
-Use the in-body `Agent` dispatch pattern instead: write the skill body to run in the main parent-model context, have it generate a minimal payload (typically via a prepare script using `lib/output.js writeOutput()` and `--output-file`), and dispatch a dedicated orchestrator agent with a two-line prompt — `MANIFEST_FILE: <path>` and `PROJECT_ROOT: <cwd>`. Pin `model: haiku` (or whichever cheaper model fits) on the **orchestrator agent** under `plugins/sdlc-utilities/agents/`, where the input is bounded to the manifest, not on the skill, where the input is the unbounded conversation.
+Use the in-body `Agent` dispatch pattern instead: write the skill body to run in the main parent-model context, have it generate a minimal payload (typically via a prepare script using `lib/output.js writeOutput()` and `--output-file`), and dispatch a dedicated orchestrator agent with a two-line prompt — `MANIFEST_FILE: <path>` and `PROJECT_ROOT: <cwd>`. Pin `model: haiku` (or whichever cheaper model fits) on the **orchestrator agent** under `agents/`, where the input is bounded to the manifest, not on the skill, where the input is the unbounded conversation.
 
 **Canonical pairs:**
 

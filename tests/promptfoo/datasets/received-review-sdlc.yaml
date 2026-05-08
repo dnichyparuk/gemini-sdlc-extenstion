@@ -4,7 +4,7 @@
 
 - description: "received-review-sdlc: processes feedback with technical rigor and pushes back on incorrect claims"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-feedback.md"
     user_request: >
       Run /received-review-sdlc. Process the 3 review comments from PR #42.
@@ -39,7 +39,7 @@
 
 - description: "received-review-sdlc: shows workflow continuation menu after implementing fixes"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/review-fixes-complete.md"
     user_request: >
       Run /received-review-sdlc. The accepted review fixes have been implemented,
@@ -62,7 +62,7 @@
 
 - description: "received-review-sdlc: incremental mode filters already-addressed comments on re-run"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-incremental.md"
     user_request: >
       Run /received-review-sdlc --pr 42. The prepare script manifest is provided in
@@ -89,7 +89,7 @@
 
 - description: "received-review-sdlc: presents mandatory PR reply step after implementing fixes"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-reply-step.md"
     user_request: >
       Run /received-review-sdlc. The review fixes have been implemented and verified
@@ -121,7 +121,7 @@
 
 - description: "received-review-sdlc: all threads resolved reports zero outstanding and skips processing"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-all-resolved.md"
     user_request: >
       Run /received-review-sdlc --pr 42 on this project. The received-review-prepare.js
@@ -143,7 +143,7 @@
 
 - description: "received-review-sdlc: missing PR context asks user for PR information"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-no-pr.md"
     user_request: >
       Run /received-review-sdlc on this project. No --pr flag was provided.
@@ -162,7 +162,7 @@
 
 - description: "received-review-sdlc: mixed batch handles all verdict types with correct actions"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-mixed-batch.md"
     user_request: >
       Run /received-review-sdlc --pr 42 on this project. The received-review-prepare.js
@@ -191,7 +191,7 @@
 
 - description: "received-review-sdlc: --auto mode auto-implements will-fix items without consent gate"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-review-critical.md"
     user_request: >
       Run /received-review-sdlc --auto. The skill was invoked with --auto from the
@@ -218,7 +218,7 @@
 
 - description: "received-review-sdlc: without --auto consent gate is mandatory even in pipeline context"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/ship-review-critical.md"
     user_request: >
       Run /received-review-sdlc. The skill was invoked from the ship-sdlc pipeline but
@@ -246,7 +246,7 @@
 
 - description: "received-review-sdlc: --auto mode auto-executes Step 12 without reply/resolve consent gate"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-reply-step.md"
     user_request: >
       Run /received-review-sdlc --auto. The prepare script manifest includes
@@ -278,7 +278,7 @@
 
 - description: "received-review-sdlc: link verification (R17, #198) — invokes script gate at Step 11.5 before posting replies"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-reply-step.md"
     user_request: >
       One of your drafted reply bodies in Step 7 contains https://github.com/rafalnagr/sdlc-marketplace/issues/190
@@ -291,7 +291,7 @@
       value: "Step 12"
     - type: llm-rubric
       value: >
-        The response describes invoking plugins/sdlc-utilities/scripts/lib/links.js as a hard gate
+        The response describes invoking scripts/lib/links.js as a hard gate
         before Step 12, validates concatenated reply bodies, and explicitly states that on non-zero
         exit no gh api replies are posted and Step 12 is NOT entered. The gate is script-enforced.
         The skill does not propose retrying, editing URLs without user input, or bypassing.
@@ -302,7 +302,7 @@
 
 - description: "received-review-sdlc (#233): R18 bypass — alwaysFixSeverities=['critical'] auto-applies critical 'will fix' without consent"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/received-review-alwaysfix-critical.md"
     user_request: >
       Run /received-review-sdlc --pr 233. The prepare manifest has
@@ -333,7 +333,7 @@
 
 - description: "received-review-sdlc (#233): medium 'will fix' falls through to consent gate when alwaysFixSeverities=['critical']"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/received-review-alwaysfix-critical.md"
     user_request: >
       Run /received-review-sdlc --pr 233 (NO --auto). The prepare manifest has
@@ -361,7 +361,7 @@
 
 - description: "received-review-sdlc (#233): unset alwaysFixSeverities preserves R9 consent behavior across all findings"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    skill_path: "skills/received-review-sdlc/SKILL.md"
     project_context: "file://fixtures/pr-review-feedback.md"
     user_request: >
       Run /received-review-sdlc --pr 42. The prepare manifest has

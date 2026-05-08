@@ -158,9 +158,8 @@ Build the final block:
 Locate the config helper:
 
 ```bash
-SCRIPT=$(find ~/.claude/plugins -name "config.js" -path "*/sdlc*/lib/config.js" 2>/dev/null | sort -V | tail -1)
-[ -z "$SCRIPT" ] && [ -f "plugins/sdlc-utilities/scripts/lib/config.js" ] && SCRIPT="plugins/sdlc-utilities/scripts/lib/config.js"
-[ -z "$SCRIPT" ] && { echo "ERROR: Could not locate lib/config.js. Is the sdlc plugin installed?" >&2; exit 2; }
+SCRIPT="scripts/lib/config.js"
+[ ! -f "$SCRIPT" ] && { echo "ERROR: Could not locate $SCRIPT. Is the sdlc extension installed?" >&2; exit 2; }
 ```
 
 Then merge the labels block into the existing `pr` section without clobbering

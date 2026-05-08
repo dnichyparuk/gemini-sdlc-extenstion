@@ -14,7 +14,7 @@ function findRepoRoot(start) {
   let dir = start;
   while (dir !== path.dirname(dir)) {
     try {
-      require('fs').statSync(path.join(dir, 'plugins/sdlc-utilities/scripts/lib/config.js'));
+      require('fs').statSync(path.join(dir, 'scripts/lib/config.js'));
       return dir;
     } catch (_) {
       dir = path.dirname(dir);
@@ -38,7 +38,7 @@ if (!repoRoot) {
   process.exit(1);
 }
 
-const { readSection } = require(path.join(repoRoot, 'plugins/sdlc-utilities/scripts/lib/config.js'));
+const { readSection } = require(path.join(repoRoot, 'scripts/lib/config.js'));
 const execute = readSection(projectRoot, 'execute');
 const guardrails = execute?.guardrails || [];
 console.log(JSON.stringify({ guardrails }));

@@ -357,8 +357,8 @@ function writeConfig(projectRoot, config) {
  * `versionSection.properties.preRelease.pattern`. Consumed by:
  *  - `scripts/skill/version.js` (CLI arg parsing for `--bump <label>` and `--pre <label>`)
  *  - `scripts/skill/ship.js` (CLI arg parsing for `--bump <label>`)
- *  - `plugins/sdlc-utilities/scripts/lib/ship-fields.js` (sdlc.json `ship.bump` validation)
- *  - `plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md` (interactive answer validation)
+ *  - `scripts/lib/ship-fields.js` (sdlc.json `ship.bump` validation)
+ *  - `skills/setup-sdlc/SKILL.md` (interactive answer validation)
  */
 const PRE_RELEASE_LABEL_RE = /^[a-z][a-z0-9]*$/;
 

@@ -50,7 +50,7 @@ Decide exactly one of:
   triggers, etc.). Hardening the surfaces would prevent the same class of
   failure next time.
 - **`plugin-defect`** — the failure points at plugin code: a script crash inside
-  `plugins/sdlc-utilities/`, malformed JSON from a sibling agent, a prepare
+  ``, malformed JSON from a sibling agent, a prepare
   script exit code 2, or a runtime contract violation between sibling skills.
   In this case, hardening user-side surfaces is the wrong response — the
   issue belongs in the plugin's tracker.

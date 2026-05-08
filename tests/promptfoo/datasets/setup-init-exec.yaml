@@ -4,7 +4,7 @@
 
 - description: "setup-init: creates .sdlc/.gitignore with * content"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/setup-init.js"
+    script_path: "repo://scripts/util/setup-init.js"
     script_args: "--project-config {} --local-config {\"review\":{\"scope\":\"committed\"}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-setup-empty"
@@ -16,7 +16,7 @@
 
 - description: "setup-init: re-run on legacy-pattern .sdlc/.gitignore migrates to managed block"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/setup-init.js"
+    script_path: "repo://scripts/util/setup-init.js"
     script_args: "--project-config {} --local-config {\"review\":{\"scope\":\"committed\"}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
@@ -26,7 +26,7 @@
 
 - description: "setup-init (#273): canonical .sdlc/.gitignore shape is byte-identical (writer returns unchanged)"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/setup-init.js"
+    script_path: "repo://scripts/util/setup-init.js"
     script_args: "--project-config {} --local-config {\"review\":{\"scope\":\"committed\"}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-sdlc-gitignore-canonical"
@@ -36,7 +36,7 @@
 
 - description: "setup-init: writes both project and local config"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/setup-init.js"
+    script_path: "repo://scripts/util/setup-init.js"
     script_args: "--project-config {\"version\":{\"mode\":\"tag\"}} --local-config {\"review\":{\"scope\":\"committed\"}}"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-setup-empty"
@@ -50,7 +50,7 @@
 
 - description: "setup-init: invalid JSON produces error and exit code 1"
   vars:
-    script_path: "repo://plugins/sdlc-utilities/scripts/util/setup-init.js"
+    script_path: "repo://scripts/util/setup-init.js"
     script_args: "--project-config 'not-json'"
     script_cwd: "{{project_root}}"
     project_root: "file://fixtures-fs/project-setup-empty"

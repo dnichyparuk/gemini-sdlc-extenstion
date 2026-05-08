@@ -7,11 +7,11 @@
 #   setup-clean-project     -- all rows state:'not-set'; pre-checked; full flow
 #   setup-legacy-migration  -- legacy rows locked; auto-selected; cannot toggle off
 #
-# All cases run via the LLM provider against `plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md`.
+# All cases run via the LLM provider against `skills/setup-sdlc/SKILL.md`.
 
 - description: "setup-sdlc: fully-configured project + user picks one section, only that section runs"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/setup-fully-configured.md"
     user_request: >
       Run /setup-sdlc. The menu appears; I want to reconfigure only the `jira` section.
@@ -43,7 +43,7 @@
 
 - description: "setup-sdlc: clean project + user accepts pre-checked menu, full flow runs"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/setup-clean-project.md"
     user_request: >
       Run /setup-sdlc. Nothing is configured; the menu should pre-check every not-set row.
@@ -71,7 +71,7 @@
 
 - description: "setup-sdlc: legacy fixture + migration row locked and cannot be toggled off"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/setup-legacy-migration.md"
     user_request: >
       Run /setup-sdlc. The version row is `legacy` (locked: true) and so are ship and review.
@@ -94,7 +94,7 @@
 
 - description: "setup-sdlc: empty selection at menu exits cleanly with no changes"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/setup-fully-configured.md"
     user_request: >
       Run /setup-sdlc. The menu appears. I uncheck every (non-locked) row and confirm
@@ -115,7 +115,7 @@
 
 - description: "setup-sdlc --only jira,review: menu skipped, both sections run"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/setup-fully-configured.md"
     user_request: >
       Run /setup-sdlc --only jira,review. Skip the menu entirely; configure only those
@@ -136,7 +136,7 @@
 
 - description: "setup-sdlc: verbose header sourced from manifest precedes any prompt"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: "file://fixtures/setup-clean-project.md"
     user_request: >
       Run /setup-sdlc --only jira. Before asking me anything, print the verbose header
@@ -172,7 +172,7 @@
 
 - description: "setup-sdlc --only pr-labels: mode=off writes { mode: 'off' } and preserves sibling pr keys"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: >
       Project at tests/promptfoo/fixtures-fs/setup-pr-labels-clean/ with an existing
       .claude/sdlc.json that already has `pr.titlePattern` and `pr.allowedTypes`. The user
@@ -201,7 +201,7 @@
 
 - description: "setup-sdlc --only pr-labels: mode=llm writes { mode: 'llm' } with no rules array"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: >
       Project at tests/promptfoo/fixtures-fs/setup-pr-labels-clean/ with no existing
       pr.labels block. `gh label list` returned ["bug","feature","docs","tests"]. The user
@@ -223,7 +223,7 @@
 
 - description: "setup-sdlc --only pr-labels: mode=rules with one branchPrefix rule writes valid block"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: >
       Project at tests/promptfoo/fixtures-fs/setup-pr-labels-clean/ with no existing
       pr.labels block. `gh label list` returned ["bug","feature","docs"]. The user runs
@@ -260,7 +260,7 @@
 
 - description: "setup-sdlc Step 1 menu: pr.labels mode=off renders [set] and 'off — no automatic labels'"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: >
       Project at tests/promptfoo/fixtures-fs/setup-pr-labels-menu-off/ with an existing
       .claude/sdlc.json containing `pr.labels: { mode: "off" }`. The user runs
@@ -289,7 +289,7 @@
 
 - description: "setup-sdlc Step 1 menu: pr.labels mode=rules with 1 rule renders [set] and 'rules: 1 rule'"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: >
       Project at tests/promptfoo/fixtures-fs/setup-pr-labels-menu-rules/ with an existing
       .claude/sdlc.json containing
@@ -317,7 +317,7 @@
 
 - description: "setup-sdlc Step 1 menu: no pr.labels key renders [not set] without 'not configured' string"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    skill_path: "skills/setup-sdlc/SKILL.md"
     project_context: >
       Project at tests/promptfoo/fixtures-fs/setup-pr-labels-menu-unset/ with an existing
       .claude/sdlc.json that has a `pr` block (titlePattern, allowedTypes) but NO

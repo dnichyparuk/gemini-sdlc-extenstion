@@ -5,7 +5,7 @@
 
 - description: "version-sdlc: release flow warns about breaking change"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-version-config.md"
     user_request: >
       Run /version-sdlc patch. The version-prepare.js output is provided in the project context.
@@ -32,7 +32,7 @@
 
 - description: "version-sdlc: init flow detects package.json and proposes config"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: "file://fixtures/project-no-version-config.md"
     user_request: >
       Run /version-sdlc --init. The version-prepare.js output is in the project context.
@@ -58,7 +58,7 @@
 
 - description: "version-sdlc: hotfix release annotates commit and tag"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: "file://fixtures/project-hotfix-release.md"
     user_request: >
       Run /version-sdlc patch --hotfix. The version-prepare.js output is provided
@@ -89,7 +89,7 @@
 
 - description: "version-sdlc: regular release does not include hotfix annotation"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-version-config.md"
     user_request: >
       Run /version-sdlc major. The version-prepare.js output is provided in the project context.
@@ -116,7 +116,7 @@
 
 - description: "version-sdlc: release blocked when version config missing"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user is on branch feat/add-search, trying to cut a release. Running version-prepare.js
       produces this JSON output:
@@ -143,7 +143,7 @@
 
 - description: "version-sdlc: --changelog standalone updates changelog without creating new tag"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: "file://fixtures/project-changelog-update.md"
     user_request: >
       Run /version-sdlc --changelog. The version-prepare.js output is provided in the project
@@ -168,7 +168,7 @@
 
 - description: "version-sdlc: changelog entries include Jira ticket IDs when ticketPrefix is set"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: "file://fixtures/project-changelog-with-tickets.md"
     user_request: >
       Run /version-sdlc minor --changelog. The version-prepare.js output is provided in the
@@ -200,7 +200,7 @@
 
 - description: "version-sdlc: no upstream — release auto-sets upstream on first push"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user is on a fresh feature branch feat/foo with no upstream configured. Running
       version-prepare.js produces this version-context JSON (excerpt):
@@ -234,7 +234,7 @@
 
 - description: "version-sdlc: existing upstream — release uses bare push (no --set-upstream)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user is on a feature branch feat/bar that already tracks origin/feat/bar.
       Running version-prepare.js produces this version-context JSON (excerpt):
@@ -276,7 +276,7 @@
 
 - description: "version-sdlc: --bump rc from clean 1.2.3 produces 1.2.4-rc.1 with no breaking-change warning"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user is on feat/payments. Running version-prepare.js with `rc` (positional
       label-form bump, sugar for --bump patch --pre rc) produces this version-context
@@ -312,7 +312,7 @@
 
 - description: "version-sdlc: --bump rc from existing 1.2.4-rc.1 increments counter to 1.2.4-rc.2"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user is iterating on an RC. Running version-prepare.js with `rc` produces:
       {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
@@ -343,7 +343,7 @@
 
 - description: "version-sdlc: --bump rc from 1.2.4-beta.3 resets counter on label change to 1.2.4-rc.1"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user is switching pre-release tracks from beta to rc. Running version-prepare.js
       with `rc` produces:
@@ -373,7 +373,7 @@
 
 - description: "version-sdlc: --pre with invalid label '1bad' is rejected by the script"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user invokes `/version-sdlc --pre 1bad`. version-prepare.js exits 1 with
       this output:
@@ -398,7 +398,7 @@
 
 - description: "version-sdlc: custom label 'mycorp' is accepted as positional bump"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user wants a private-tag pre-release. Running version-prepare.js with
       `mycorp` produces:
@@ -424,7 +424,7 @@
 
 - description: "version-sdlc: config.preRelease=rc with no flags behaves like --bump rc"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user has set `version.preRelease: "rc"` in .claude/sdlc.json. Running
       version-prepare.js with no positional bump and no flags produces:
@@ -455,7 +455,7 @@
 
 - description: "version-sdlc: explicit --bump major overrides config.preRelease and graduates"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user has `version.preRelease: "rc"` in .claude/sdlc.json but is graduating
       with --bump major. Running version-prepare.js with `major` produces:
@@ -491,7 +491,7 @@
 
 - description: "version-sdlc: plugin.json edit uses targeted Edit + post-edit diff hard gate (#211)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user is releasing a Claude Code plugin. Running version-prepare.js with `patch --auto`
       produces this version-context JSON (excerpt):
@@ -538,7 +538,7 @@
 
 - description: "version-sdlc: config.changelog=true with no --changelog flag still drafts CHANGELOG (#213)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: >
       The user has `version.changelog: true` in .claude/sdlc.json but did NOT pass --changelog
       on the CLI. Running version-prepare.js with `patch` produces this version-context JSON
@@ -580,7 +580,7 @@
 
 - description: "version-sdlc: link verification (R17, #198) — invokes script gate at Step 8.3b before git commit"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-version-config.md"
     user_request: >
       The CHANGELOG entry you drafted contains a wrong-owner github URL
@@ -594,7 +594,7 @@
       value: "git commit"
     - type: llm-rubric
       value: >
-        The response describes invoking plugins/sdlc-utilities/scripts/lib/links.js as a hard gate
+        The response describes invoking scripts/lib/links.js as a hard gate
         before the release git commit (Step 8.4), validates the new CHANGELOG entry, and explicitly
         states that on non-zero exit git commit and git tag are NOT executed. The gate is
         script-enforced. The skill does not propose retrying, editing URLs without user input, or
@@ -602,7 +602,7 @@
 
 - description: "version-sdlc: patch --auto with config.changelog=true drafts and writes CHANGELOG (#219)"
   vars:
-    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    skill_path: "skills/version-sdlc/SKILL.md"
     project_context: "file://fixtures/project-with-version-config-auto-changelog.md"
     user_request: >
       Run /version-sdlc patch --auto. The version-prepare.js output is provided in the project
