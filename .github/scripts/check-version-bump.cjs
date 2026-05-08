@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * check-version-bump.cjs
- * CI script: verifies that modified plugins have their version bumped.
+ * CI script: verifies that the extension version is bumped when files change.
  *
  * Usage:
  *   node check-version-bump.cjs [--base <ref>]
@@ -10,8 +10,6 @@
  *   BASE_REF  — base commit SHA (from PR base)
  *
  * Exit codes: 0 = pass, 1 = version bump required, 2 = script error
- *
- * Uses only Node.js built-in modules. No npm install required.
  */
 
 'use strict';
@@ -38,24 +36,6 @@ function parseArgs(argv) {
 }
 
 // ---------------------------------------------------------------------------
-// Plugin discovery
-// ---------------------------------------------------------------------------
-
-function discoverPlugins(repoRoot) {
-  const marketplacePath = path.join(repoRoot, '.claude-plugin', 'marketplace.json');
-  const marketplace = JSON.parse(fs.readFileSync(marketplacePath, 'utf-8'));
-
-  return marketplace.plugins.map(p => {
-    const sourcePath = p.source.replace(/^\.\//, '');
-    return {
-      name: p.name,
-      sourcePath,
-      versionFilePath: path.join(sourcePath, '.claude-plugin', 'plugin.json'),
-    };
-  });
-}
-
-// ---------------------------------------------------------------------------
 // Git helpers
 // ---------------------------------------------------------------------------
 
@@ -75,7 +55,7 @@ function getVersionFromRef(ref, filePath, repoRoot) {
     });
     return JSON.parse(content).version || null;
   } catch {
-    // File doesn't exist in base branch (new plugin) or other git error
+    // File doesn't exist in base branch (new extension) or other git error
     return null;
   }
 }
@@ -85,7 +65,7 @@ function getVersionFromRef(ref, filePath, repoRoot) {
 // ---------------------------------------------------------------------------
 
 function isVersionBumped(baseVersion, headVersion) {
-  if (!baseVersion) return true;  // New plugin — any version is valid
+  if (!baseVersion) return true;  // New — any version is valid
   if (!headVersion) return false; // Version removed — invalid
   if (baseVersion === headVersion) return false; // Same — not bumped
 
@@ -116,11 +96,19 @@ function main() {
     process.exit(2);
   }
 
-  let plugins;
+  const extensionManifestPath = 'gemini-extension.json';
+  const absManifestPath = path.join(repoRoot, extensionManifestPath);
+
+  if (!fs.existsSync(absManifestPath)) {
+    process.stderr.write('Error: gemini-extension.json not found in repository root\n');
+    process.exit(2);
+  }
+
+  let headVersion;
   try {
-    plugins = discoverPlugins(repoRoot);
+    headVersion = JSON.parse(fs.readFileSync(absManifestPath, 'utf-8')).version || null;
   } catch (err) {
-    process.stderr.write(`Error reading marketplace.json: ${err.message}\n`);
+    process.stderr.write(`Error reading gemini-extension.json: ${err.message}\n`);
     process.exit(2);
   }
 
@@ -132,50 +120,45 @@ function main() {
     process.exit(2);
   }
 
-  // Identify which plugins have changed files
-  const affectedPlugins = plugins.filter(plugin => {
-    const prefix = plugin.sourcePath + '/';
-    return changedFiles.some(f => f.startsWith(prefix));
-  });
+  // Exclude files that don't trigger a version bump requirement
+  const ignorePatterns = [
+    /^\.github\//,
+    /^docs\//,
+    /^tests\//,
+    /^site\//,
+    /^README\.md$/,
+    /^CHANGELOG\.md$/,
+    /^LICENSE$/,
+    /^GEMINI\.md$/,
+    /^GUIDE\.md$/,
+    /^Taskfile\.yml$/,
+    /^\.gitignore$/,
+    /^\.sdlc\//,
+  ];
 
-  if (affectedPlugins.length === 0) {
-    console.log('No plugin files changed — version check not required.');
+  const relevantChanges = changedFiles.filter(f => !ignorePatterns.some(p => p.test(f)));
+
+  if (relevantChanges.length === 0) {
+    console.log('No core extension files changed — version check not required.');
     process.exit(0);
   }
 
-  let failures = 0;
+  const baseVersion = getVersionFromRef(baseRef, extensionManifestPath, repoRoot);
+  const bumped = isVersionBumped(baseVersion, headVersion);
 
-  for (const plugin of affectedPlugins) {
-    const baseVersion = getVersionFromRef(baseRef, plugin.versionFilePath, repoRoot);
-
-    let headVersion = null;
-    const absVersionFile = path.join(repoRoot, plugin.versionFilePath);
-    try {
-      headVersion = JSON.parse(fs.readFileSync(absVersionFile, 'utf-8')).version || null;
-    } catch {
-      // Plugin directory deleted in this PR — treat as pass (deletion is valid)
-      console.log(`PASS: ${plugin.name} — plugin removed (no version file on disk)`);
-      continue;
-    }
-
-    const bumped = isVersionBumped(baseVersion, headVersion);
-
-    if (bumped) {
-      const from = baseVersion ? baseVersion : '(new)';
-      console.log(`PASS: ${plugin.name} — ${from} -> ${headVersion}`);
-    } else {
-      console.log(`FAIL: ${plugin.name} — version not bumped (${baseVersion} -> ${headVersion})`);
-      console.log(
-        `::error file=${plugin.versionFilePath}::` +
-        `Plugin "${plugin.name}" has modified files but version was not bumped ` +
-        `(still ${headVersion}). Update the version in ${plugin.versionFilePath}.`
-      );
-      failures++;
-    }
+  if (bumped) {
+    const from = baseVersion ? baseVersion : '(new)';
+    console.log(`PASS: sdlc-gemini — ${from} -> ${headVersion}`);
+    process.exit(0);
+  } else {
+    console.log(`FAIL: sdlc-gemini — version not bumped (${baseVersion} -> ${headVersion})`);
+    console.log(
+      `::error file=${extensionManifestPath}::` +
+      `Extension has modified core files but version was not bumped ` +
+      `(still ${headVersion}). Update the version in ${extensionManifestPath}.`
+    );
+    process.exit(1);
   }
-
-  console.log(`\n${affectedPlugins.length} plugin(s) checked, ${failures} failure(s).`);
-  process.exit(failures > 0 ? 1 : 0);
 }
 
 main();
