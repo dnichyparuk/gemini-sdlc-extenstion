@@ -1,0 +1,790 @@
+# Fixture appropriateness:
+#   project-with-dimensions            -- CORRECT: primary use case; 3 dimensions active with file matching
+#   project-with-uncovered-suggestions -- CORRECT: uncovered file suggestions surfaced in review plan
+#   project-no-dimensions              -- CORRECT: edge case; no dimensions installed → error + suggestion
+#   feature-branch-*                   -- INVALID: PR context, not review context
+
+- description: "review-sdlc: multi-dimension review with active dimensions"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-dimensions.md"
+    user_request: >
+      Run /review-sdlc on this project. The review-prepare.js manifest is provided in the
+      project context. Display the review plan showing which dimensions are active.
+  assert:
+    # Must reference dimensions concept
+    - type: icontains
+      value: "dimension"
+    # Must show active/skipped status for dimensions
+    - type: regex
+      value: "(ACTIVE|active|skipped|SKIPPED)"
+    # Must reference the specific dimensions from the manifest
+    - type: regex
+      value: "(security-review|code-quality-review|api-review)"
+    # Behavioral: consumes manifest, reports dimension status, describes orchestration
+    - type: llm-rubric
+      value: >
+        The response consumes the review manifest and reports which dimensions are active
+        (security-review, code-quality-review, api-review — all 3 should be ACTIVE based on
+        the manifest). It shows file counts per dimension. It either describes how it would
+        delegate to the review-orchestrator agent or describes the review plan in detail.
+        The response mentions the specific dimension names and does not fabricate additional
+        dimensions not present in the manifest.
+
+- description: "review-sdlc: dry-run shows plan without dispatching agents"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-dimensions.md"
+    user_request: >
+      Run /review-sdlc --dry-run on this project. The review-prepare.js manifest is in the
+      project context. Show the review plan only — do not dispatch any review agents.
+  assert:
+    # Must acknowledge dry-run mode
+    - type: regex
+      value: "(dry.run|dry run|DRY.RUN)"
+    # Must show a plan table with dimension information (matches table header "Dimension",
+    # lowercase "dimension" in narrative, or actual dimension names from the fixture)
+    - type: regex
+      value: "(Dimension|dimension|security-review|code-quality-review)"
+    # Must NOT affirmatively dispatch agents (negated references like "without dispatching" are allowed)
+    - type: not-regex
+      value: "(I will now spawn|I am dispatching|Launching agent|Using the Agent tool)"
+    # Behavioral: plan-only output, no actual review findings
+    - type: llm-rubric
+      value: >
+        The response clearly states this is a dry run and shows only the review plan — a table
+        or list of dimensions with their status (ACTIVE/SKIPPED), file counts, and severity.
+        It explicitly does NOT dispatch the review-orchestrator agent or any subagents. It does
+        NOT produce any actual code review findings or comments. It describes what would happen
+        if the --dry-run flag were omitted.
+
+- description: "review-sdlc: surfaces dimension suggestions for uncovered files"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-uncovered-suggestions.md"
+    user_request: >
+      Run /review-sdlc on this project. The review-prepare.js manifest is in the project context.
+      Show the review plan including any suggestions for uncovered files.
+  assert:
+    # Must mention the suggested dimension names
+    - type: regex
+      value: "(ci-cd-pipeline-review|configuration-management-review)"
+    # Must reference the uncovered file paths or types
+    - type: regex
+      value: '(workflows|ci\.yml|config|\.env)'
+    # Must point to setup-sdlc --dimensions --add
+    - type: regex
+      value: "(setup-sdlc --dimensions|--add)"
+    # Behavioral: surfaces suggestions, directs user to setup-sdlc
+    - type: llm-rubric
+      value: >
+        The response reads the manifest showing 5 uncovered files with 2 dimension suggestions:
+        ci-cd-pipeline-review (for .github/workflows/ci.yml and deploy.yml) and
+        configuration-management-review (for src/config/db.ts, src/config/auth.ts, .env.example).
+        It displays these suggestions in the review plan — either in a "Suggested new dimensions"
+        block or as plan critique warnings — and references the specific file paths or types.
+        It recommends running /setup-sdlc --dimensions --add to create those dimensions. It does NOT
+        create the dimension files itself during the review run.
+
+- description: "review-sdlc: no dimensions installed reports error and suggests setup-sdlc"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-no-dimensions.md"
+    user_request: "Run /review-sdlc on this project."
+  assert:
+    # Must report the missing dimensions problem
+    - type: regex
+      value: "(no.+dimension|dimension.+not.+found|no review dimension|0 dimension)"
+    # Must suggest running setup-sdlc --dimensions
+    - type: regex
+      value: "(setup-sdlc --dimensions|/setup-sdlc --dimensions)"
+    # Behavioral: clear error message, correct suggestion
+    - type: llm-rubric
+      value: >
+        The response reads the error from the review-prepare.js manifest (no dimensions found)
+        and clearly reports that no review dimensions are installed. It recommends running
+        /setup-sdlc --dimensions to create tailored dimensions for this Python/FastAPI project. It does
+        NOT fabricate a review without dimensions. The message is clear and actionable.
+
+- description: "review-sdlc: --dimensions filter shows only selected dimension as active"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-filtered-dimensions.md"
+    user_request: >
+      Run /review-sdlc --dimensions security-review on this project. The review-prepare.js
+      manifest is in the project context. Show the review plan.
+  assert:
+    - type: icontains
+      value: "security-review"
+    - type: regex
+      value: "(filter|--dimensions|selected|only)"
+    - type: regex
+      value: "(ACTIVE|active)"
+    - type: llm-rubric
+      value: >
+        The response shows only security-review as an active dimension because --dimensions
+        was used to filter. It acknowledges that the filter was applied (mentioning 3 total
+        dimensions but only 1 active after filtering). It does not show the other dimensions
+        (code-quality-review, api-review) as active.
+
+- description: "review-sdlc: committed scope shows branch changes only"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-committed-scope.md"
+    user_request: >
+      Run /review-sdlc --committed on this project. The review-prepare.js manifest is in
+      the project context. Show the review plan.
+  assert:
+    - type: regex
+      value: "(committed|branch changes|branch.only)"
+    - type: regex
+      value: "(main|base.branch)"
+    - type: not-regex
+      value: "(staged changes|unstaged|staging area|git add)"
+    - type: llm-rubric
+      value: >
+        The response shows the review plan for committed scope, meaning only branch changes
+        (committed vs base branch). It references the base branch. It does NOT mention staged
+        or unstaged changes since the scope is committed-only.
+
+- description: "review-sdlc: truncated dimension shows warning about file cap"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-truncated-dimension.md"
+    user_request: >
+      Run /review-sdlc on this project. The review-prepare.js manifest is in the project
+      context. Show the review plan including any warnings.
+  assert:
+    - type: regex
+      value: "(TRUNCATED|truncated|truncat)"
+    - type: regex
+      value: "(150|max.files|100|cap|limit)"
+    - type: llm-rubric
+      value: >
+        The response shows the review plan with code-quality-review in TRUNCATED status.
+        It warns that this dimension matched 150 files but was capped to the max-files
+        limit of 100. The review still proceeds with the truncated file list. Security-review
+        is shown as ACTIVE normally.
+
+- description: "review-sdlc: queued dimensions shown when cap applied"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-queued-dimensions.md"
+    user_request: >
+      Run /review-sdlc on this project. The review-prepare.js manifest is in the project
+      context. Show the review plan including all dimension statuses.
+  assert:
+    - type: regex
+      value: "(QUEUED|queued)"
+    - type: regex
+      value: "(8|eight).*(active|ACTIVE)"
+    - type: regex
+      value: "(accessibility|internationalization)"
+    - type: llm-rubric
+      value: >
+        The response shows 8 active dimensions and 2 queued dimensions (accessibility
+        and internationalization). It explains that the dimension cap was applied. It
+        suggests re-running to process the queued dimensions or using --dimensions to
+        select them specifically.
+
+- description: "review-sdlc: over-broad dimension warning surfaced in plan"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-overbroad-warning.md"
+    user_request: >
+      Run /review-sdlc on this project. The review-prepare.js manifest is in the project
+      context. Show the review plan with any warnings about dimension quality.
+  assert:
+    - type: regex
+      value: "(over.broad|overbroad|too.broad|broad.coverage|covers.*80)"
+    - type: icontains
+      value: "code-quality-review"
+    - type: llm-rubric
+      value: >
+        The response flags code-quality-review as over-broad (it covers 9 out of 10
+        changed files, over 80%). It suggests tightening the dimension's trigger patterns
+        to be more specific. The review plan still shows it as active, but with a warning.
+
+- description: "review-sdlc: orchestrator dispatched with model from manifest"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-dimensions.md"
+    user_request: >
+      Run /review-sdlc on this project. The review-prepare.js manifest includes
+      subagent_model: sonnet. Show how the orchestrator agent is dispatched.
+  assert:
+    - type: regex
+      value: "(model.*sonnet|sonnet.*model|subagent_model)"
+    - type: llm-rubric
+      value: >
+        The response describes dispatching the review-orchestrator agent. The
+        dispatch indicates that dimension subagents should use sonnet as their
+        model (via manifest.subagent_model or explicit model: sonnet).
+
+- description: "review-sdlc: post-confirmation yes posts via gh api -F body=@ without re-dispatch (issue #167)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/review-post-confirm-yes.md"
+    user_request: >
+      Continue the /review-sdlc flow. The orchestrator has already returned the summary shown
+      in the project context and the user replied "yes". Describe exactly what happens next
+      in the main context, including the precise shell command used to post the comment.
+  assert:
+    # Must post via -F body=@ (file form, not -f body="…")
+    - type: regex
+      value: 'gh api[^\n]+-F body=@'
+    # Must reference the orchestrator-provided comment_file path
+    - type: icontains
+      value: "/tmp/review-diff-abc123/review-comment.md"
+    # Must NOT use the fragile -f body="…" inline form
+    - type: not-regex
+      value: '-f body="'
+    # Must NOT re-dispatch any agent to post the comment
+    - type: not-regex
+      value: "(dispatch.*orchestrator|spawn.*Agent|Agent tool|subagent_type)"
+    # Behavioral: one gh api call, zero agent re-dispatch, cleanup happens after
+    - type: llm-rubric
+      value: >
+        The response describes posting the consolidated review comment to PR #42 via exactly
+        one `gh api repos/acme-corp/widgets/issues/42/comments -F body=@/tmp/review-diff-abc123/review-comment.md`
+        call. It does NOT re-invoke the review-orchestrator, does NOT dispatch any new Agent,
+        and does NOT use the fragile `-f body="…"` inline form. After posting, both the
+        manifest file and the diff dir (`/tmp/review-diff-abc123`) are cleaned up.
+
+- description: "review-sdlc: post-confirmation cancel — no gh api, no save, diff_dir cleaned (issue #167)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/review-post-confirm-cancel.md"
+    user_request: >
+      Continue the /review-sdlc flow. The orchestrator has already returned the summary shown
+      in the project context and the user replied "cancel". Describe exactly what happens next.
+  assert:
+    # Must NOT invoke gh api
+    - type: not-regex
+      value: "gh api"
+    # Must NOT write anything under .claude/reviews/
+    - type: not-regex
+      value: '\.claude/reviews/[^"\s]*\.md'
+    # Must clean up the diff dir from the summary
+    - type: regex
+      value: "(rm -rf.*review-diff-def456|/tmp/review-diff-def456.*(cleaned|removed|deleted))"
+    # Behavioral
+    - type: llm-rubric
+      value: >
+        The response acknowledges the cancel reply. It does NOT post via `gh api`. It does NOT
+        write any file under `.claude/reviews/`. It still cleans up the manifest file and the
+        diff dir at `/tmp/review-diff-def456` — cleanup runs on every terminal branch, including
+        cancel. It does not re-dispatch the orchestrator.
+
+- description: "review-sdlc: post-confirmation save — copies comment to .claude/reviews, no gh api (issue #167)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/review-post-confirm-save.md"
+    user_request: >
+      Continue the /review-sdlc flow. The orchestrator has already returned the summary shown
+      in the project context and the user replied "save". Describe exactly what happens next,
+      including the filename under .claude/reviews/.
+  assert:
+    # Must NOT invoke gh api
+    - type: not-regex
+      value: "gh api"
+    # Must save under .claude/reviews/<branch>-<date>.md
+    - type: regex
+      value: '\.claude/reviews/feat-search-api-\d{4}-\d{2}-\d{2}\.md|\.claude/reviews/[^"\s]*search-api[^"\s]*\.md'
+    # Must reference the orchestrator-provided comment_file as the source
+    - type: icontains
+      value: "/tmp/review-diff-ghi789/review-comment.md"
+    # Must clean up the diff dir after save
+    - type: regex
+      value: "(rm -rf.*review-diff-ghi789|/tmp/review-diff-ghi789.*(cleaned|removed|deleted))"
+    # Behavioral
+    - type: llm-rubric
+      value: >
+        The response describes saving the consolidated comment to a file under
+        `.claude/reviews/` named `<branch>-<YYYY-MM-DD>.md` where branch is `feat/search-api`
+        (slashes replaced or preserved per project convention) and the date is today. The save
+        is performed by copying from the orchestrator-provided `Comment file` path
+        (`/tmp/review-diff-ghi789/review-comment.md`). It does NOT call `gh api`. After saving,
+        both the manifest file and the diff dir (`/tmp/review-diff-ghi789`) are cleaned up.
+        It does not re-dispatch the orchestrator.
+
+- description: "review-sdlc: step-3-full-body-display — emits review-comment.md verbatim before posting prompt (issue #176)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/review-step-3-full-body-display.md"
+    user_request: >
+      The review-orchestrator has returned the summary in the project context and the
+      consolidated comment body has been persisted to /tmp/review-diff-issue176/review-comment.md.
+      Resume the skill at Step 3 — display the orchestrator summary, then read and emit
+      the full contents of comment_file verbatim, then show the Step 4 posting prompt.
+  assert:
+    # All four findings (every severity) must appear verbatim — file:line references
+    - type: icontains
+      value: "src/auth/login.ts:42"
+    - type: icontains
+      value: "src/auth/session.ts:88"
+    - type: icontains
+      value: "src/search/query.ts:120"
+    - type: icontains
+      value: "src/api/search.ts:15"
+    # Each finding's message text must appear (not collapsed to a placeholder)
+    - type: icontains
+      value: "Plaintext password comparison"
+    - type: icontains
+      value: "Session token has no expiry"
+    - type: icontains
+      value: "Unbounded recursion in nested filter parser"
+    - type: icontains
+      value: "Inconsistent response envelope"
+    # The truncation placeholder must NOT appear in any form
+    - type: not-regex
+      value: "(Additional finding \\(see PR comment for details\\)|see PR comment for details|see comment for details)"
+    # The model must NOT replace the body with a synthesized severity/count table
+    # standing in for findings — i.e., must not output a table whose only data rows
+    # are bare severity labels with no file:line. The presence of file:line above
+    # is the positive evidence; here we forbid an obvious collapsed-table phrasing.
+    - type: not-regex
+      value: "(\\| critical \\| 1 \\|\\s*\\n\\s*\\| high \\| 1 \\|\\s*\\n\\s*\\| medium \\| 1 \\|\\s*\\n\\s*\\| low \\| 1 \\|\\s*$)"
+    # Posting prompt must appear, and must appear AFTER the findings (login.ts:42 is
+    # the first finding in the body) — regex enforces ordering
+    - type: regex
+      value: "(?s)src/auth/login\\.ts:42.*?yes\\s*/\\s*save\\s*/\\s*cancel"
+    # Behavioral rubric
+    - type: llm-rubric
+      value: >
+        The response performs Step 3 of /review-sdlc. It first displays the orchestrator's
+        structured summary verbatim. It then emits the full contents of
+        /tmp/review-diff-issue176/review-comment.md verbatim — every one of the 4 findings
+        appears with its file:line reference and full message text (CRITICAL plaintext
+        password, HIGH session expiry, MEDIUM unbounded recursion, LOW response envelope).
+        It does NOT summarize, paraphrase, or collapse any finding to a placeholder like
+        "Additional finding (see PR comment for details)". It does NOT replace the body
+        with a synthesized severity/count table. The Step 4 posting prompt
+        (yes / save / cancel) appears AFTER the full comment body, not before. R13 and
+        G5 are satisfied.
+
+- description: "review-sdlc: approved verdict completes cleanly without fix offer"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/review-verdict-approved.md"
+    user_request: >
+      The review-orchestrator has completed. The results are in the project context.
+      Present the final review summary and next steps.
+  assert:
+    - type: regex
+      value: "(APPROVED|approved)"
+    - type: not-regex
+      value: "(CHANGES REQUESTED|changes requested|please revise)"
+    - type: llm-rubric
+      value: >
+        The response acknowledges the review verdict as APPROVED. It presents the
+        summary showing 2 low findings across 2 dimensions. It does NOT offer to
+        fix findings via received-review-sdlc as a primary action (since no critical
+        or high findings exist). The tone is positive — the review passed cleanly.
+        Mentioning received-review-sdlc in a general "available commands" context
+        is acceptable, but it should not be presented as a recommended next action.
+
+- description: "review-sdlc: per-dimension model override (R15, #199) — orchestrator honors dimension.model"
+  vars:
+    skill_path: "plugins/sdlc-utilities/agents/review-orchestrator.md"
+    project_context: "file://fixtures/project-dimension-model-override.md"
+    user_request: >
+      The review-orchestrator is about to dispatch dimension subagents. The manifest in the
+      project context contains two dimensions: security-review (with model: claude-haiku-4-5-20251001)
+      and style-review (with model: null). manifest.subagent_model is "sonnet". Walk through the
+      Step 2 dispatch — what model is passed for each dimension and why?
+  assert:
+    # Must mention the per-dimension override mechanism
+    - type: regex
+      value: "(dimension\\.model|per-dimension|override)"
+    # Must explicitly name the haiku model for security-review
+    - type: icontains
+      value: "claude-haiku-4-5-20251001"
+    # Must mention the sonnet fallback for the dimension without an override
+    - type: icontains
+      value: "sonnet"
+    - type: llm-rubric
+      value: >
+        The response correctly explains that security-review is dispatched with
+        model: claude-haiku-4-5-20251001 (per-dimension override) and style-review is
+        dispatched with model: sonnet (manifest.subagent_model fallback because its
+        dimension.model is null). The response references the precedence rule
+        `dimension.model || manifest.subagent_model`. It does not invent model names not
+        present in the manifest, and it does not claim style-review uses opus or haiku.
+
+- description: "review-sdlc: Copilot transform omits per-dimension model field (R15, #199)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/setup-dimensions.md"
+    project_context: "file://fixtures/project-dimension-model-override.md"
+    user_request: >
+      The user runs /setup-sdlc --dimensions on a project where security-review.md declares
+      `model: claude-haiku-4-5-20251001` in its frontmatter. Generate the Copilot equivalent at
+      .github/instructions/security-review.instructions.md and explain which fields are dropped.
+  assert:
+    # The generated Copilot file must NOT contain a model field
+    - type: not-icontains
+      value: "model: claude-haiku"
+    - type: not-regex
+      value: "(?im)^model:\\s"
+    # Must explicitly mention the Omit transform behavior
+    - type: regex
+      value: "(omit|Omit|drop|stripped|excluded)"
+    - type: llm-rubric
+      value: >
+        The response generates a Copilot instructions file for security-review and explicitly
+        notes that the `model:` field is omitted in the Copilot transform (because Copilot has
+        no model-selector concept). The explanation references the transform table that groups
+        model with max-files and requires-full-diff in the Omit row. The generated file does
+        NOT contain any `model:` line in its frontmatter or body.
+
+- description: "review-sdlc: link verification (R14, #198) — invokes script gate before gh api comments POST"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/SKILL.md"
+    project_context: "file://fixtures/review-post-confirm-yes.md"
+    user_request: >
+      The consolidated review-comment.md body contains a wrong-owner github URL
+      (https://github.com/rafalnagr/sdlc-marketplace/issues/190). The user just answered "yes" to the
+      posting prompt. Walk through Step 4 in detail — what runs before gh api ... /comments, and what
+      happens if the link validator exits non-zero?
+  assert:
+    - type: icontains
+      value: "scripts/lib/links.js"
+    - type: icontains
+      value: "gh api"
+    - type: llm-rubric
+      value: >
+        The response describes invoking plugins/sdlc-utilities/scripts/lib/links.js as a hard gate
+        before gh api ... /comments, passes the comment_file via --file, and explicitly states that
+        on non-zero exit gh api is NOT executed. The gate is script-enforced. The skill does not
+        propose retrying, editing URLs without user input, or bypassing.
+
+# ---------------------------------------------------------------------------
+# Issue #231: review-sdlc reads .sdlc/review-dimensions/ first, legacy fallback
+# ---------------------------------------------------------------------------
+
+- description: "review-sdlc: prefers .sdlc/review-dimensions/ over legacy"
+  vars:
+    skill_content: |
+      The review skill needs to load review-dimension files. Where does it look?
+  assert:
+    - type: llm-rubric
+      value: >
+        The skill describes reading review dimensions from
+        `.sdlc/review-dimensions/` first. It mentions a one-time deprecation
+        fallback to `.claude/review-dimensions/` for compatibility during the
+        deprecation window. The skill does NOT hardcode `.claude/review-dimensions/`
+        as the only path.
+
+# ---------------------------------------------------------------------------
+# OWASP Top 10 — issue #272
+# Each case asserts the security-review subagent tags findings with the
+# matching A0x category code per the optional **OWASP:** finding slot
+# defined in REFERENCE.md §2 / §3 and the EXAMPLES.md security-review body.
+# ---------------------------------------------------------------------------
+
+- description: "review-sdlc: OWASP A01 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/admin/users.ts
+      +++ b/src/admin/users.ts
+      @@ -10,6 +10,12 @@
+       router.get('/admin/users/:id', requireAuth, async (req, res) => {
+      -  if (!req.user.isAdmin) return res.status(403).end();
+         const user = await db.users.findById(req.params.id);
+         res.json(user);
+       });
+      ```
+
+      The dimension body instructs OWASP tagging. Produce the finding using the format defined in
+      plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md §2 (Output Format for findings) — the
+      OWASP slot is optional but REQUIRED here because the dimension body asks for it.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A01'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*critical'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for the removed admin authorization check.
+        The finding includes a **OWASP:** field set to A01 (broken access control) and a
+        **Severity:** of critical, matching the OWASP defaults from EXAMPLES.md security-review.
+        The finding follows the format from REFERENCE.md §2.
+
+- description: "review-sdlc: OWASP A02 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/auth/password.ts
+      +++ b/src/auth/password.ts
+      @@ -3,5 +3,7 @@
+      -import { scryptSync, randomBytes } from 'node:crypto';
+      +import { createHash } from 'node:crypto';
+      +export function hashPassword(pw: string) {
+      +  return createHash('md5').update(pw).digest('hex');
+      +}
+      ```
+
+      The dimension body instructs OWASP tagging. Produce the finding per REFERENCE.md §2.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A02'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*critical'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for the introduction of MD5 password hashing.
+        The finding is tagged **OWASP:** A02 (cryptographic failures) and **Severity:** critical,
+        matching the OWASP defaults from EXAMPLES.md security-review.
+
+- description: "review-sdlc: OWASP A03 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/users/search.ts
+      +++ b/src/users/search.ts
+      @@ -8,3 +8,5 @@
+      -const rows = await db.prepared('SELECT * FROM users WHERE email = ?').all(req.query.q);
+      +const rows = await db.exec("SELECT * FROM users WHERE email = '" + req.query.q + "'");
+      ```
+
+      The dimension body instructs OWASP tagging. Produce the finding per REFERENCE.md §2.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A03'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*critical'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for the SQL string concatenation introducing
+        injection. The finding is tagged **OWASP:** A03 (injection) and **Severity:** critical,
+        matching the OWASP defaults.
+
+- description: "review-sdlc: OWASP A04 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/auth/login.ts
+      +++ b/src/auth/login.ts
+      @@ -2,6 +2,8 @@
+       router.post('/login', async (req, res) => {
+      -  await rateLimit(req.ip);
+         const user = await users.findByEmail(req.body.email);
+         if (!await verify(user, req.body.password)) return res.status(401).end();
+         res.json(await issueToken(user));
+       });
+      ```
+
+      The dimension body instructs OWASP tagging. The removal of the rate-limit guard exposes the
+      login endpoint to credential stuffing — an insecure-design omission. Produce the finding.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A04'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*high'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for the removal of rate limiting on login.
+        The finding is tagged **OWASP:** A04 (insecure design) and **Severity:** high, matching
+        the OWASP defaults from EXAMPLES.md security-review.
+
+- description: "review-sdlc: OWASP A05 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/server.ts
+      +++ b/src/server.ts
+      @@ -4,6 +4,7 @@
+       import cors from 'cors';
+      -app.use(cors({ origin: 'https://app.example.com' }));
+      +app.use(cors({ origin: '*', credentials: true }));
+       app.use('/api', apiRouter);
+      ```
+
+      The dimension body instructs OWASP tagging. Produce the finding per REFERENCE.md §2.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A05'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*high'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for the overly permissive CORS configuration
+        (origin '*' with credentials true). The finding is tagged **OWASP:** A05 (security
+        misconfiguration) and **Severity:** high.
+
+- description: "review-sdlc: OWASP A06 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/package.json
+      +++ b/package.json
+      @@ -10,3 +10,4 @@
+         "dependencies": {
+      +    "lodash": "4.17.4",
+           "express": "^4.19.2"
+         }
+      ```
+
+      lodash@4.17.4 is known-vulnerable (CVE-2019-10744 prototype pollution). The dimension body
+      instructs OWASP tagging. Produce the finding.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A06'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*high'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for adding a dependency at a version with
+        a known CVE. The finding is tagged **OWASP:** A06 (vulnerable & outdated components) and
+        **Severity:** high.
+
+- description: "review-sdlc: OWASP A07 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/routes/billing.ts
+      +++ b/src/routes/billing.ts
+      @@ -2,6 +2,7 @@
+       const router = express.Router();
+      -router.post('/billing/charge', requireAuth, chargeHandler);
+      +router.post('/billing/charge', chargeHandler);
+       export default router;
+      ```
+
+      The dimension body instructs OWASP tagging. The auth middleware was removed from a sensitive
+      route — an authentication failure. Produce the finding.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A07'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*critical'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for the removal of authentication from a
+        billing endpoint. The finding is tagged **OWASP:** A07 (identification & authentication
+        failures) and **Severity:** critical, matching the OWASP defaults.
+
+- description: "review-sdlc: OWASP A08 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/jobs/import.ts
+      +++ b/src/jobs/import.ts
+      @@ -3,4 +3,5 @@
+       import { unserialize } from 'node-serialize';
+       export async function processJob(payload: string) {
+      -  const data = JSON.parse(payload);
+      +  const data = unserialize(payload);
+         await ingest(data);
+       }
+      ```
+
+      The dimension body instructs OWASP tagging. The change introduces untrusted deserialisation —
+      a software/data integrity failure. Produce the finding.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A08'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*high'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for replacing JSON.parse with the unsafe
+        `unserialize` API on user-supplied data. The finding is tagged **OWASP:** A08 (software &
+        data integrity failures) and **Severity:** high.
+
+- description: "review-sdlc: OWASP A09 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/auth/login.ts
+      +++ b/src/auth/login.ts
+      @@ -8,6 +8,5 @@
+       export async function handleLogin(req, res) {
+         const user = await users.findByEmail(req.body.email);
+         if (!await verify(user, req.body.password)) {
+      -    auditLogger.warn('login_failed', { email: req.body.email, ip: req.ip });
+           return res.status(401).end();
+         }
+       }
+      ```
+
+      The dimension body instructs OWASP tagging. Audit logging for failed logins was removed.
+      Produce the finding.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A09'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*medium'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for the removal of failed-login audit
+        logging. The finding is tagged **OWASP:** A09 (security logging & monitoring failures) and
+        **Severity:** medium, matching the OWASP defaults.
+
+- description: "review-sdlc: OWASP A10 — finding tagged with category (issue #272)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/review-sdlc/REFERENCE.md"
+    user_request: "Produce the security finding for the diff above."
+    skill_content: |
+      You are running the review-sdlc security-review dimension subagent against this diff:
+
+      ```
+      --- a/src/proxy/fetch.ts
+      +++ b/src/proxy/fetch.ts
+      @@ -2,5 +2,5 @@
+       export async function proxy(req, res) {
+      -  if (!isAllowedHost(req.query.url)) return res.status(400).end();
+         const upstream = await fetch(req.query.url);
+         res.send(await upstream.text());
+       }
+      ```
+
+      The dimension body instructs OWASP tagging. The host-allowlist check was removed before a
+      fetch driven by user-controlled input — an SSRF vector. Produce the finding.
+  assert:
+    - type: regex
+      value: '\*\*OWASP\*\*:?\s*A10'
+    - type: regex
+      value: '(?i)\*\*Severity\*\*:?\s*high'
+    - type: llm-rubric
+      value: >
+        The response surfaces a security-review finding for the removal of the URL allowlist check
+        on a server-side fetch driven by user input. The finding is tagged **OWASP:** A10 (SSRF)
+        and **Severity:** high.

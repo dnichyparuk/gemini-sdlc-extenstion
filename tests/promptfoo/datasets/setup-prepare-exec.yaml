@@ -1,0 +1,162 @@
+# Script execution tests for setup.js P7 contract (shipFields).
+# These tests run setup.js directly against fixture directories (no LLM).
+# Covers: P7 shipFields emission, field shape, order, and v2 schema migration (issues #152, #180).
+
+- description: "setup-prepare: emits shipFields with 7 entries (v2: steps replaces preset+skip)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-setup-empty"
+  assert:
+    - type: icontains
+      value: '"shipFields"'
+    - type: javascript
+      value: "JSON.parse(output).shipFields.length === 7"
+
+- description: "setup-prepare: shipFields order is stable (steps → reviewThreshold)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-setup-empty"
+  assert:
+    - type: javascript
+      value: |
+        const names = JSON.parse(output).shipFields.map(f => f.name);
+        const expected = ['steps','bump','draft','auto','workspace','rebase','reviewThreshold'];
+        return JSON.stringify(names) === JSON.stringify(expected)
+
+- description: "setup-prepare: shipFields entries have the full 6-key descriptor shape"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-setup-empty"
+  assert:
+    - type: javascript
+      value: |
+        const keys = ['name','label','type','options','default','description'];
+        return JSON.parse(output).shipFields.every(f => keys.every(k => k in f))
+
+- description: "setup-prepare: shipFields.steps has exactly 7 canonical options"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-setup-empty"
+  assert:
+    - type: javascript
+      value: |
+        const steps = JSON.parse(output).shipFields.find(f => f.name === 'steps');
+        const expected = ['execute','commit','review','version','pr','archive-openspec','learnings-commit'];
+        return steps.type === 'multi-select' && JSON.stringify(steps.options) === JSON.stringify(expected)
+
+- description: "setup-prepare: shipFields no longer emits preset or skip fields"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-setup-empty"
+  assert:
+    - type: javascript
+      value: |
+        const fields = JSON.parse(output).shipFields;
+        return !fields.some(f => f.name === 'preset') && !fields.some(f => f.name === 'skip')
+
+- description: "setup-prepare: still emits P1-P6 fields alongside shipFields"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-setup-empty"
+  assert:
+    - type: icontains
+      value: '"projectConfig"'
+    - type: icontains
+      value: '"localConfig"'
+    - type: icontains
+      value: '"legacy"'
+    - type: icontains
+      value: '"content"'
+    - type: icontains
+      value: '"detected"'
+    - type: icontains
+      value: '"needsMigration"'
+
+- description: "setup-prepare: needsMigration true when local config has legacy preset (v1)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-legacy-v1"
+  assert:
+    - type: javascript
+      value: |
+        const out = JSON.parse(output);
+        return out.needsMigration === true && out.localIsV1 === true
+
+- description: "setup-prepare: counts .md review-dimension files (regression #203)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-with-dimensions"
+  assert:
+    - type: javascript
+      value: "JSON.parse(output).content.reviewDimensions.count === 3"
+
+# Issue #235 — setup-sdlc walks every field by default; --unset-only opts in to legacy fast-path.
+- description: "setup-prepare (issue #235): no flag → flags.unsetOnly=false, defaultSelectionMode=all"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/setup-fully-configured"
+  assert:
+    - type: javascript
+      value: |
+        const out = JSON.parse(output);
+        return out.flags && out.flags.unsetOnly === false && out.defaultSelectionMode === 'all'
+
+- description: "setup-prepare (issue #235): --unset-only → flags.unsetOnly=true, defaultSelectionMode=unset-only"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    script_args: "--unset-only"
+    project_root: "file://fixtures-fs/setup-fully-configured"
+  assert:
+    - type: javascript
+      value: |
+        const out = JSON.parse(output);
+        return out.flags.unsetOnly === true && out.defaultSelectionMode === 'unset-only'
+
+- description: "setup-prepare (issue #235): --force overrides --unset-only → defaultSelectionMode=all"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    script_args: "--unset-only --force"
+    project_root: "file://fixtures-fs/setup-fully-configured"
+  assert:
+    - type: javascript
+      value: |
+        const out = JSON.parse(output);
+        return out.flags.unsetOnly === true && out.flags.force === true && out.defaultSelectionMode === 'all'
+
+# Issue #235 — first-run on empty project: every section is 'not-set'; both modes yield identical pre-checks.
+- description: "setup-prepare (issue #235): first-run on empty project — flags.unsetOnly defaults false"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-setup-empty"
+  assert:
+    - type: javascript
+      value: |
+        const out = JSON.parse(output);
+        return out.flags.unsetOnly === false && out.defaultSelectionMode === 'all'
+
+# Issue #234 — pr.expectedAccount surfaces in the standard menu walk.
+- description: "setup-prepare (issue #234): pr section exposes expectedAccount field with origin-owner default"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/setup.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/setup-fully-configured"
+  assert:
+    - type: javascript
+      value: |
+        const out = JSON.parse(output);
+        const pr = out.sections.find(s => s.id === 'pr');
+        if (!pr) return false;
+        const ea = pr.fields.find(f => f.name === 'expectedAccount');
+        return Boolean(ea) && ea.type === 'string' && ea.default === 'test-user'

@@ -1,0 +1,633 @@
+# Fixture appropriateness:
+#   project-with-version-config  -- CORRECT: release flow with breaking change detection
+#   project-no-version-config    -- CORRECT: init flow detects package.json
+#   feature-branch-with-commits  -- INVALID: PR context, not versioning context
+
+- description: "version-sdlc: release flow warns about breaking change"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-version-config.md"
+    user_request: >
+      Run /version-sdlc patch. The version-prepare.js output is provided in the project context.
+      Show the release plan and any warnings.
+  assert:
+    # Must reference the current or next version
+    - type: regex
+      value: '(2\.1\.0|2\.1\.1|3\.0\.0|2\.2\.0)'
+    # Must warn about the breaking change
+    - type: icontains
+      value: "breaking"
+    # Must NOT proceed to tag without user confirmation (simulation: shows plan only)
+    - type: not-icontains
+      value: "git tag created"
+    # Behavioral: detects breaking change, warns, recommends major bump
+    - type: llm-rubric
+      value: >
+        The response reads the version-prepare.js output showing currentVersion=2.1.0 with a
+        breaking change (feat!: remove deprecated /api/v1 endpoints). It warns the user that a
+        major bump (to 3.0.0) is strongly recommended over the requested patch (to 2.1.1). It
+        presents a release plan showing the options (patch: 2.1.1, minor: 2.2.0, major: 3.0.0)
+        and asks the user to confirm before proceeding. It does NOT silently apply the patch bump
+        despite the breaking change.
+
+- description: "version-sdlc: init flow detects package.json and proposes config"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-no-version-config.md"
+    user_request: >
+      Run /version-sdlc --init. The version-prepare.js output is in the project context.
+      Show the detected setup and proposed configuration.
+  assert:
+    # Must identify the version file
+    - type: icontains
+      value: "package.json"
+    # Must show the detected current version
+    - type: regex
+      value: '0\.3\.1'
+    # Must propose writing .claude/version.json
+    - type: icontains
+      value: ".claude/version.json"
+    # Behavioral: presents detected config, asks for confirmation
+    - type: llm-rubric
+      value: >
+        The response follows the init workflow: it reads the version-prepare.js output showing
+        detectedVersionFile=package.json, currentVersion=0.3.1, and tagPrefix=v. It presents the
+        detected configuration and the suggested .claude/version.json content. It asks the user
+        to confirm (accept/modify/cancel) before writing the config file. It does NOT write any
+        files in this simulation — it describes what would happen with confirmation.
+
+- description: "version-sdlc: hotfix release annotates commit and tag"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-hotfix-release.md"
+    user_request: >
+      Run /version-sdlc patch --hotfix. The version-prepare.js output is provided
+      in the project context. Show the release plan.
+  assert:
+    # Must show version bump
+    - type: regex
+      value: '(1\.4\.2|1\.4\.3)'
+    # Must indicate hotfix in the release plan
+    - type: icontains
+      value: "hotfix"
+    # Must show the tag annotation will include hotfix metadata
+    - type: regex
+      value: '(Type:\s*hotfix|\[hotfix\])'
+    # Must NOT proceed without user confirmation
+    - type: not-icontains
+      value: "git tag created"
+    # Behavioral: reads hotfix flag, presents plan with hotfix annotation, awaits confirmation
+    - type: llm-rubric
+      value: >
+        The response reads the version-prepare.js output showing currentVersion=1.4.2 with
+        flags.hotfix=true and requestedBump=patch. It presents a release plan showing the bump
+        from 1.4.2 to 1.4.3 with tag v1.4.3. The plan clearly indicates this is a hotfix release
+        (e.g. a "Hotfix: yes" line or equivalent). The commit message format shown includes [hotfix]
+        (e.g., chore(release): v1.4.3 [hotfix]) and/or the tag message includes Type: hotfix.
+        It asks the user to confirm (yes / edit / cancel) before proceeding. It does NOT execute
+        any git commands without explicit user approval.
+
+- description: "version-sdlc: regular release does not include hotfix annotation"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-version-config.md"
+    user_request: >
+      Run /version-sdlc major. The version-prepare.js output is provided in the project context.
+      Show the release plan. This is NOT a hotfix — do not use the --hotfix flag.
+  assert:
+    # Must show version bump
+    - type: regex
+      value: '(2\.1\.0|3\.0\.0)'
+    # Must NOT include hotfix annotation in the plan
+    - type: not-regex
+      value: 'Type:\s*hotfix'
+    # The commit message format must not include [hotfix]
+    - type: not-icontains
+      value: "[hotfix]"
+    # Behavioral: regular release plan with no hotfix metadata anywhere
+    - type: llm-rubric
+      value: >
+        The response presents a release plan for a regular (non-hotfix) major version bump from
+        2.1.0 to 3.0.0. The commit message format shown is the standard "chore(release): v3.0.0"
+        without any [hotfix] suffix. The tag message is the standard "Release v3.0.0" without
+        "Type: hotfix" metadata. The plan does not show a Hotfix line or mention hotfix as a
+        release attribute anywhere. It warns about the breaking change detected and asks the user
+        to confirm before proceeding.
+
+- description: "version-sdlc: release blocked when version config missing"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user is on branch feat/add-search, trying to cut a release. Running version-prepare.js
+      produces this JSON output:
+      {"flow": "release", "errors": ["No version config found. Run /version-sdlc --init to set up
+      versioning for this project."], "warnings": [], "currentVersion": null, "config": null}
+    user_request: "Run /version-sdlc minor to cut a release."
+  assert:
+    # Must report the error
+    - type: regex
+      value: "(error|no.+config|config.+not.+found|--init)"
+    # Must NOT show a release plan since config is missing
+    - type: not-icontains
+      value: "Release Plan"
+    # Must suggest --init
+    - type: regex
+      value: "(--init|version-sdlc --init|/version-sdlc --init)"
+    # Behavioral: surfaces error, suggests init, does not attempt release
+    - type: llm-rubric
+      value: >
+        The response reads the error from version-prepare.js ("No version config found") and
+        clearly reports that the release cannot proceed. It recommends running /version-sdlc --init
+        first to initialize versioning configuration. It does NOT attempt to guess a version or
+        proceed with a release. The message is actionable and references the correct command.
+
+- description: "version-sdlc: --changelog standalone updates changelog without creating new tag"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-changelog-update.md"
+    user_request: >
+      Run /version-sdlc --changelog. The version-prepare.js output is provided in the project
+      context. Show the updated changelog entry and what changed compared to the existing entry.
+  assert:
+    # Must identify the current version
+    - type: regex
+      value: '1\.3\.0'
+    # Must NOT propose creating a new tag
+    - type: not-icontains
+      value: "git tag"
+    # Must show a comparison or diff of the changelog change
+    - type: llm-rubric
+      value: >
+        The response reads the version-prepare.js output showing flow="changelog-update",
+        currentVersion=1.3.0, currentTag=v1.3.0, previousTag=v1.2.0, and 2 commits
+        (a dark mode feat and a dark mode fix). It recognises this is a changelog-update
+        flow (not a release). It identifies that the existing ## [1.3.0] entry only has
+        the "dark mode support" feat but is missing the "dark mode toggle state" fix.
+        It drafts an updated entry that includes both commits. It presents the diff to the
+        user and asks for approval. It does NOT create a new tag or bump the version.
+
+- description: "version-sdlc: changelog entries include Jira ticket IDs when ticketPrefix is set"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-changelog-with-tickets.md"
+    user_request: >
+      Run /version-sdlc minor --changelog. The version-prepare.js output is provided in the
+      project context. Show the release plan and the draft changelog entry.
+  assert:
+    # Must show the new version
+    - type: regex
+      value: '2\.1\.0'
+    # Must include PROJ-123 in the changelog draft
+    - type: icontains
+      value: "PROJ-123"
+    # Must include PROJ-456 in the changelog draft
+    - type: icontains
+      value: "PROJ-456"
+    # Must NOT include fabricated ticket IDs
+    - type: not-regex
+      value: 'PROJ-(?!123|456)\d+'
+    # Behavioral: reads ticketPrefix, appends ticket IDs to changelog entries
+    - type: llm-rubric
+      value: >
+        The response reads the version-prepare.js output showing flow="release",
+        requestedBump="minor", config.ticketPrefix="PROJ", and 3 commits with ticketIds.
+        It drafts a ## [2.1.0] changelog entry that includes the two feat commits and one
+        fix commit. The webhook delivery entry includes (PROJ-123) and the token refresh
+        fix includes (PROJ-456). The email digest scheduling entry has no ticket ID (ticketIds
+        is empty for that commit). The ticket IDs are appended in parentheses at the end of
+        each relevant entry line. It presents a release plan and asks for confirmation before
+        proceeding.
+
+- description: "version-sdlc: no upstream — release auto-sets upstream on first push"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user is on a fresh feature branch feat/foo with no upstream configured. Running
+      version-prepare.js produces this version-context JSON (excerpt):
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v", "changelog": false}, "versionSource": {"currentVersion": "1.2.3"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "1.2.4", "minor": "1.3.0",
+      "major": "2.0.0"}, "tags": {"latest": "v1.2.3"}, "commits": [{"type": "fix",
+      "subject": "correct rate limit header"}], "flags": {"noPush": false, "auto": true,
+      "hotfix": false, "changelog": false}, "conflictsWithNext": {"patch": false,
+      "minor": false, "major": false}, "currentBranch": "feat/foo",
+      "remoteState": {"hasUpstream": false}, "errors": [], "warnings": []}
+    user_request: >
+      Run /version-sdlc patch --auto. The version-prepare.js output is provided in the
+      project context. Show the release plan and the exact push command(s) you would run.
+  assert:
+    # Must auto-set upstream for the current branch
+    - type: regex
+      value: 'git push (--set-upstream|-u) origin feat/foo'
+    # Must still push tags
+    - type: icontains
+      value: "git push --tags"
+    - type: llm-rubric
+      value: >
+        The response reads the version-context output, recognises remoteState.hasUpstream
+        is false and currentBranch is "feat/foo", and emits the push step as
+        `git push --set-upstream origin feat/foo && git push --tags` (or equivalent
+        `git push -u origin feat/foo && git push --tags`). It does NOT emit a bare
+        `git push` for the release commit. It does NOT prompt the user to manually set
+        the upstream — the skill self-heals. The tag push (`git push --tags`) is unchanged.
+
+- description: "version-sdlc: existing upstream — release uses bare push (no --set-upstream)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user is on a feature branch feat/bar that already tracks origin/feat/bar.
+      Running version-prepare.js produces this version-context JSON (excerpt):
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v", "changelog": false}, "versionSource": {"currentVersion": "1.2.3"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "1.2.4", "minor": "1.3.0",
+      "major": "2.0.0"}, "tags": {"latest": "v1.2.3"}, "commits": [{"type": "fix",
+      "subject": "correct rate limit header"}], "flags": {"noPush": false, "auto": true,
+      "hotfix": false, "changelog": false}, "conflictsWithNext": {"patch": false,
+      "minor": false, "major": false}, "currentBranch": "feat/bar",
+      "remoteState": {"hasUpstream": true}, "errors": [], "warnings": []}
+    user_request: >
+      Run /version-sdlc patch --auto. The version-prepare.js output is provided in the
+      project context. Show the release plan and the exact push command(s) you would run.
+  assert:
+    # Must use plain `git push` followed by `git push --tags`
+    - type: icontains
+      value: "git push"
+    - type: icontains
+      value: "git push --tags"
+    # Must NOT inject --set-upstream / -u when an upstream already exists (regression guard)
+    - type: not-regex
+      value: 'git push.*--set-upstream'
+    - type: not-regex
+      value: 'git push -u '
+    - type: llm-rubric
+      value: >
+        The response reads the version-context output, recognises remoteState.hasUpstream
+        is true, and emits the push step as `git push && git push --tags` — the standard
+        two-command push with no `--set-upstream` flag and no `-u` shorthand. The branch
+        name "feat/bar" does NOT appear in the push command. This is the regression-guard
+        case: ensure auto-upstream behaviour does not leak into branches that already
+        have an upstream.
+
+# ---------------------------------------------------------------------------
+# Pre-release bump labels (#193)
+# ---------------------------------------------------------------------------
+
+- description: "version-sdlc: --bump rc from clean 1.2.3 produces 1.2.4-rc.1 with no breaking-change warning"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user is on feat/payments. Running version-prepare.js with `rc` (positional
+      label-form bump, sugar for --bump patch --pre rc) produces this version-context
+      JSON (excerpt):
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v", "changelog": false}, "versionSource": {"currentVersion": "1.2.3"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "1.2.4", "minor": "1.3.0",
+      "major": "2.0.0", "preRelease": "1.2.4-rc.1"}, "tags": {"latest": "v1.2.3"},
+      "commits": [{"type": "fix", "subject": "fix payment timeout"}],
+      "flags": {"noPush": false, "auto": false, "hotfix": false, "changelog": false,
+      "preLabel": "rc", "bumpFromLabel": true, "preLabelExplicit": false,
+      "preLabelFromConfig": false}, "conflictsWithNext": {"patch": false,
+      "minor": false, "major": false}, "currentBranch": "feat/payments",
+      "remoteState": {"hasUpstream": true}, "errors": [], "warnings": []}
+    user_request: >
+      Run /version-sdlc rc. The version-prepare.js output is provided in the project
+      context. Show the resolved version and the release plan.
+  assert:
+    - type: icontains
+      value: "1.2.4-rc.1"
+    - type: not-icontains
+      value: "breaking change"
+    - type: not-regex
+      value: '(?i)suggest.*major'
+    - type: llm-rubric
+      value: >
+        The response uses bumpOptions.preRelease (1.2.4-rc.1) as the resolved release
+        version. It does NOT propose 1.2.4 (plain patch) or 1.3.0 (minor). It does NOT
+        warn about breaking changes or suggest a major bump (R3 reworded — pre-release
+        sources skip the warning). It recognises bumpFromLabel=true and explains that
+        `rc` was treated as a pre-release label. The release plan tag is v1.2.4-rc.1.
+
+- description: "version-sdlc: --bump rc from existing 1.2.4-rc.1 increments counter to 1.2.4-rc.2"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user is iterating on an RC. Running version-prepare.js with `rc` produces:
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v"}, "versionSource": {"currentVersion": "1.2.4-rc.1"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "1.2.5", "minor": "1.3.0",
+      "major": "2.0.0", "preRelease": "1.2.4-rc.2"}, "tags": {"latest": "v1.2.4-rc.1"},
+      "commits": [{"type": "fix", "subject": "address RC1 review feedback"}],
+      "flags": {"noPush": false, "auto": false, "preLabel": "rc",
+      "bumpFromLabel": true, "preLabelExplicit": false, "preLabelFromConfig": false},
+      "conflictsWithNext": {"patch": false, "preRelease": false},
+      "currentBranch": "feat/payments", "remoteState": {"hasUpstream": true},
+      "errors": [], "warnings": []}
+    user_request: >
+      Run /version-sdlc rc. The version-prepare.js output is provided. Show the
+      resolved version.
+  assert:
+    - type: icontains
+      value: "1.2.4-rc.2"
+    - type: not-icontains
+      value: "1.2.5"
+    - type: llm-rubric
+      value: >
+        The response uses bumpOptions.preRelease (1.2.4-rc.2) — the same-base counter
+        increment of 1.2.4-rc.1. It does NOT propose 1.2.5-rc.1 (which would be a stale
+        same-label semantic) or 1.2.5 (plain patch). It explicitly notes the counter
+        increment (rc.1 -> rc.2) on the same base.
+
+- description: "version-sdlc: --bump rc from 1.2.4-beta.3 resets counter on label change to 1.2.4-rc.1"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user is switching pre-release tracks from beta to rc. Running version-prepare.js
+      with `rc` produces:
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v"}, "versionSource": {"currentVersion": "1.2.4-beta.3"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "1.2.5", "minor": "1.3.0",
+      "major": "2.0.0", "preRelease": "1.2.4-rc.1"}, "tags": {"latest": "v1.2.4-beta.3"},
+      "commits": [], "flags": {"noPush": false, "auto": false, "preLabel": "rc",
+      "bumpFromLabel": true, "preLabelExplicit": false, "preLabelFromConfig": false},
+      "conflictsWithNext": {"preRelease": false}, "currentBranch": "feat/payments",
+      "remoteState": {"hasUpstream": true}, "errors": [], "warnings": []}
+    user_request: >
+      Run /version-sdlc rc. The version-prepare.js output is provided. Show the
+      resolved version.
+  assert:
+    - type: icontains
+      value: "1.2.4-rc.1"
+    - type: not-icontains
+      value: "beta"
+    - type: llm-rubric
+      value: >
+        The response uses bumpOptions.preRelease (1.2.4-rc.1). The counter resets to
+        1 on label change from beta to rc, on the same base 1.2.4. The response does
+        NOT propose 1.2.4-beta.4 (continuing the beta train) or 1.2.5-rc.1 (bumping
+        the base). The label change is acknowledged.
+
+- description: "version-sdlc: --pre with invalid label '1bad' is rejected by the script"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user invokes `/version-sdlc --pre 1bad`. version-prepare.js exits 1 with
+      this output:
+      {"flow": "release", "errors": ["Invalid --pre label '1bad'. Labels must match
+      /^[a-z][a-z0-9]*$/ (lowercase, start with a letter, alphanumeric)."],
+      "warnings": []}
+    user_request: "Run /version-sdlc --pre 1bad."
+  assert:
+    - type: icontains
+      value: "1bad"
+    - type: regex
+      value: '(?i)(invalid|reject|cannot)'
+    - type: not-icontains
+      value: "Release Plan"
+    - type: llm-rubric
+      value: >
+        The response surfaces the script's error verbatim or paraphrased — the label
+        '1bad' is invalid because it starts with a digit. It does NOT proceed to a
+        release plan, does NOT silently coerce the label, and does NOT attempt any
+        git command. It points the user at the regex `^[a-z][a-z0-9]*$` for the
+        valid label format.
+
+- description: "version-sdlc: custom label 'mycorp' is accepted as positional bump"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user wants a private-tag pre-release. Running version-prepare.js with
+      `mycorp` produces:
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v"}, "versionSource": {"currentVersion": "1.0.0"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "1.0.1", "minor": "1.1.0",
+      "major": "2.0.0", "preRelease": "1.0.1-mycorp.1"}, "tags": {"latest": "v1.0.0"},
+      "commits": [{"type": "feat", "subject": "internal hardening"}],
+      "flags": {"preLabel": "mycorp", "bumpFromLabel": true, "preLabelExplicit": false,
+      "preLabelFromConfig": false, "auto": false}, "conflictsWithNext": {"preRelease": false},
+      "currentBranch": "feat/internal", "remoteState": {"hasUpstream": true},
+      "errors": [], "warnings": []}
+    user_request: "Run /version-sdlc mycorp."
+  assert:
+    - type: icontains
+      value: "1.0.1-mycorp.1"
+    - type: llm-rubric
+      value: >
+        The response uses bumpOptions.preRelease (1.0.1-mycorp.1) and accepts the
+        custom label. It does NOT reject the label as unrecognized — any label
+        matching `^[a-z][a-z0-9]*$` is valid.
+
+- description: "version-sdlc: config.preRelease=rc with no flags behaves like --bump rc"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user has set `version.preRelease: "rc"` in .claude/sdlc.json. Running
+      version-prepare.js with no positional bump and no flags produces:
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v", "preRelease": "rc"}, "versionSource": {"currentVersion": "1.2.3"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "1.2.4", "minor": "1.3.0",
+      "major": "2.0.0", "preRelease": "1.2.4-rc.1"}, "tags": {"latest": "v1.2.3"},
+      "commits": [{"type": "fix", "subject": "fix flaky test"}],
+      "flags": {"preLabel": "rc", "bumpFromLabel": false, "preLabelExplicit": false,
+      "preLabelFromConfig": true, "auto": false}, "conflictsWithNext": {"preRelease": false},
+      "currentBranch": "feat/payments", "remoteState": {"hasUpstream": true},
+      "errors": [], "warnings": []}
+    user_request: "Run /version-sdlc."
+  assert:
+    - type: icontains
+      value: "1.2.4-rc.1"
+    - type: regex
+      value: '(?i)(config|preRelease|sdlc\.json)'
+    - type: not-regex
+      value: '(?i)suggest.*major'
+    - type: llm-rubric
+      value: >
+        The response uses bumpOptions.preRelease (1.2.4-rc.1) and explicitly mentions
+        that the pre-release label was sourced from config.preRelease (preLabelFromConfig=true)
+        rather than a CLI flag. The behavior matches `--bump rc`. The breaking-change
+        warning is NOT triggered (no breaking changes anyway, but the principle holds).
+
+- description: "version-sdlc: explicit --bump major overrides config.preRelease and graduates"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user has `version.preRelease: "rc"` in .claude/sdlc.json but is graduating
+      with --bump major. Running version-prepare.js with `major` produces:
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v", "preRelease": "rc"}, "versionSource": {"currentVersion": "1.2.4-rc.1"},
+      "requestedBump": "major", "conventionalSummary": {"suggestedBump": "major",
+      "hasBreakingChanges": true}, "bumpOptions": {"patch": "1.2.5", "minor": "1.3.0",
+      "major": "2.0.0"}, "tags": {"latest": "v1.2.4-rc.1"},
+      "commits": [{"type": "feat", "subject": "feat!: redesign API", "breaking": true}],
+      "flags": {"preLabel": null, "bumpFromLabel": false, "preLabelExplicit": false,
+      "preLabelFromConfig": false, "auto": false}, "conflictsWithNext": {"major": false},
+      "currentBranch": "feat/v2", "remoteState": {"hasUpstream": true},
+      "errors": [], "warnings": []}
+    user_request: "Run /version-sdlc major."
+  assert:
+    - type: icontains
+      value: "2.0.0"
+    - type: not-icontains
+      value: "rc"
+    - type: not-icontains
+      value: "preRelease"
+    - type: llm-rubric
+      value: >
+        The response uses bumpOptions.major (2.0.0) — a clean, non-pre-release version.
+        Explicit base bump overrides config.preRelease (precedence rule). The release
+        plan does NOT include any pre-release suffix. bumpOptions.preRelease is absent
+        from the output (script did not compute one). The user has graduated out of
+        the rc train.
+
+# ---------------------------------------------------------------------------
+# Version-file integrity (#211) and resolved flags.changelog (#213)
+# ---------------------------------------------------------------------------
+
+- description: "version-sdlc: plugin.json edit uses targeted Edit + post-edit diff hard gate (#211)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user is releasing a Claude Code plugin. Running version-prepare.js with `patch --auto`
+      produces this version-context JSON (excerpt):
+      {"flow": "release", "config": {"mode": "file", "versionFile": "plugin.json",
+      "tagPrefix": "v", "changelog": false},
+      "versionSource": {"currentVersion": "0.1.0"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "0.1.1", "minor": "0.2.0",
+      "major": "1.0.0"}, "tags": {"latest": "v0.1.0"},
+      "commits": [{"type": "fix", "subject": "tighten input validation"}],
+      "flags": {"noPush": false, "auto": true, "hotfix": false, "changelog": false},
+      "conflictsWithNext": {"patch": false}, "currentBranch": "main",
+      "remoteState": {"hasUpstream": true}, "errors": [], "warnings": []}
+      The on-disk plugin.json has a long "description" field, an "author" object, a "keywords"
+      array, a "homepage", and a "repository" object — many fields beyond version that the LLM
+      must NOT touch.
+    user_request: >
+      Run /version-sdlc patch --auto. Walk through Step 8.1 — show how you update plugin.json
+      and what verification you perform after the edit. Show the exact Edit-tool call (old_string
+      and new_string) and the post-edit verification command.
+  assert:
+    # Must use the Edit tool (not Write, not bash sed)
+    - type: icontains
+      value: "Edit"
+    # Must NOT propose Write tool or full file rewrite
+    - type: not-icontains
+      value: "Write tool"
+    # Must verify with git diff
+    - type: regex
+      value: 'git diff (--?[a-z]+ )*plugin\.json'
+    # Must NOT touch description, author, keywords (no mention of changing these in the response)
+    - type: not-regex
+      value: '(?i)(rewrite|regenerate|update).*(description|author|keywords)'
+    - type: llm-rubric
+      value: >
+        The response describes Step 8.1 by performing a single targeted Edit-tool call against
+        plugin.json with old_string="\"version\": \"0.1.0\"" and new_string="\"version\": \"0.1.1\"".
+        It explicitly states that Write tool and full-file rewrites are forbidden. After the edit
+        it runs `git diff plugin.json` (or `git diff -- plugin.json`) and asserts that EXACTLY ONE
+        line changed — the version line. It says that if more than one line differs (e.g. the
+        description was truncated or fields were reordered), the release is aborted and the file
+        is restored with `git checkout -- plugin.json`. It does NOT propose touching the
+        description, author, keywords, homepage, or repository fields.
+
+- description: "version-sdlc: config.changelog=true with no --changelog flag still drafts CHANGELOG (#213)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: >
+      The user has `version.changelog: true` in .claude/sdlc.json but did NOT pass --changelog
+      on the CLI. Running version-prepare.js with `patch` produces this version-context JSON
+      (excerpt):
+      {"flow": "release", "config": {"mode": "file", "versionFile": "package.json",
+      "tagPrefix": "v", "changelog": true},
+      "versionSource": {"currentVersion": "1.0.0"},
+      "requestedBump": "patch", "conventionalSummary": {"suggestedBump": "patch",
+      "hasBreakingChanges": false}, "bumpOptions": {"patch": "1.0.1", "minor": "1.1.0",
+      "major": "2.0.0"}, "tags": {"latest": "v1.0.0"},
+      "commits": [{"type": "feat", "subject": "add new capability"}],
+      "flags": {"noPush": false, "auto": false, "hotfix": false, "changelog": true},
+      "changelog": {"exists": false, "filePath": "CHANGELOG.md", "currentContent": null},
+      "conflictsWithNext": {"patch": false}, "currentBranch": "main",
+      "remoteState": {"hasUpstream": true}, "errors": [], "warnings": []}
+      Note: the script (after the #213 fix) emits flags.changelog=true as the RESOLVED value
+      (config.changelog OR --changelog). The skill must consume flags.changelog directly.
+    user_request: >
+      Run /version-sdlc patch. Show the release plan including the drafted CHANGELOG entry.
+  assert:
+    # Must show new version
+    - type: regex
+      value: '1\.0\.1'
+    # Must draft a Keep-a-Changelog heading
+    - type: regex
+      value: '## \[1\.0\.1\]'
+    # Must include the feat commit in the Added section
+    - type: icontains
+      value: "Added"
+    - type: icontains
+      value: "new capability"
+    - type: llm-rubric
+      value: >
+        The response reads version-context flags.changelog=true (the resolved value emitted by
+        skill/version.js, sourced from config.changelog=true) and treats it as a single
+        authoritative gate — it does NOT re-check config.changelog. It drafts a Keep-a-Changelog
+        entry under `## [1.0.1] - YYYY-MM-DD` with the feat commit listed under the Added
+        section. The release plan presents the drafted changelog and asks for confirmation.
+
+- description: "version-sdlc: link verification (R17, #198) — invokes script gate at Step 8.3b before git commit"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-version-config.md"
+    user_request: >
+      The CHANGELOG entry you drafted contains a wrong-owner github URL
+      (https://github.com/rafalnagr/sdlc-marketplace/issues/190). The user approved the release plan in
+      Step 5. Walk through Step 8 sub-steps 3 → 3b → 4. What runs before the release commit, and what
+      happens if the validator exits non-zero?
+  assert:
+    - type: icontains
+      value: "scripts/lib/links.js"
+    - type: icontains
+      value: "git commit"
+    - type: llm-rubric
+      value: >
+        The response describes invoking plugins/sdlc-utilities/scripts/lib/links.js as a hard gate
+        before the release git commit (Step 8.4), validates the new CHANGELOG entry, and explicitly
+        states that on non-zero exit git commit and git tag are NOT executed. The gate is
+        script-enforced. The skill does not propose retrying, editing URLs without user input, or
+        bypassing.
+
+- description: "version-sdlc: patch --auto with config.changelog=true drafts and writes CHANGELOG (#219)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/version-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-version-config-auto-changelog.md"
+    user_request: >
+      Run /version-sdlc patch --auto. The version-prepare.js output is provided in the project
+      context. Note: flags.changelog is true (resolved from config.changelog), flags.auto is true.
+      Show the release plan, the draft CHANGELOG entry, and describe the Step 8 execution.
+  assert:
+    # Release plan must show "Changelog: yes" — NOT "no" (the bug)
+    - type: icontains
+      value: "Changelog:  yes"
+    # Must NOT show "Changelog: no" — that is the bug being fixed
+    - type: not-icontains
+      value: "Changelog:  no"
+    # Must reference the resolved field name, not raw CLI arg
+    - type: icontains
+      value: "flags.changelog"
+    # Must mention writing CHANGELOG.md (Step 8.2)
+    - type: icontains
+      value: "CHANGELOG"
+    - type: llm-rubric
+      value: >
+        The response correctly interprets flags.changelog === true (resolved from config.changelog,
+        not from a CLI flag) and: (1) renders "Changelog: yes" in the release plan, (2) presents
+        a draft CHANGELOG entry showing the version 0.17.44 with the two commits (one fix and one
+        feat) categorized appropriately under Keep a Changelog sections, (3) describes Step 8.2
+        as writing the new entry to CHANGELOG.md. It must NOT say it will skip the changelog,
+        say "Changelog: no", or claim --changelog was not passed as a reason to skip. Auto mode
+        skips the AskUserQuestion approval but still displays the plan and runs the changelog
+        write step.

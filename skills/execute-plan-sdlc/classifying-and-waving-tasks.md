@@ -1,0 +1,270 @@
+# Classifying Tasks and Building Waves
+
+Reference for the `execute-plan-sdlc` skill — Step 2 (CLASSIFY).
+
+## Complexity Classification Heuristics
+
+| Signal | Complexity |
+|---|---|
+| Task mentions "rename", "update config", "change value", "add import" | Trivial |
+| Task body is < 3 sentences with a single clear action | Trivial |
+| Task creates or modifies 1 file with a well-defined output at a single location | Trivial |
+| Task edits multiple distinct locations in a single file (e.g., struct + interface + init + getter) | Standard |
+| Task creates or modifies 2–4 files with clear outputs | Standard |
+| Task implements a feature, writes tests, adds a component | Standard |
+| Task involves > 5 files or cross-cutting concerns | Complex |
+| Task requires understanding multiple existing modules to implement correctly | Complex |
+| Task involves architectural patterns or systemic changes | Complex |
+
+When signals are mixed, round up (prefer higher complexity class).
+
+## Risk Classification Heuristics
+
+| Signal | Risk Level |
+|---|---|
+| Task touches only test files | Low |
+| Task touches only documentation or comments | Low |
+| Task creates new internal-only modules with no public surface | Low |
+| Task modifies a public API or function signatures called by other modules | Medium |
+| Task changes database schemas, migrations, or data models | Medium |
+| Task modifies authentication, authorization, or session handling | High |
+| Task changes infrastructure (Docker, k8s, CI/CD, deploy scripts) | High |
+| Task involves credential management, secrets, or encryption | High |
+| Task deletes files or removes existing functionality | High |
+| Task touches shared state accessible by multiple services | High |
+
+When signals are mixed, round up (prefer higher risk level).
+
+## Model Assignment
+
+Model assignment derives from the complexity class. The three presets in Step 4 apply these mappings across all tasks.
+
+| Complexity | Default Model | Rationale |
+|---|---|---|
+| Trivial | `haiku` | Fast, cheap; frees main context for orchestration. Single trivial → execute inline. Two or more trivials in the same phase → dispatch as one batch agent. |
+| Standard | `sonnet` | Capable, cost-efficient |
+| Complex | `opus` | Most capable; needed for architectural work |
+
+### Override signals
+
+Assign `opus` to a Standard task when:
+- The task involves unfamiliar or poorly documented code
+- The task requires nuanced judgment (choosing between multiple valid approaches)
+- A prior `sonnet` attempt on a similar task in this project failed
+
+Assign `sonnet` to a Complex task when:
+- The task is complex only because it touches many files, but each individual change is mechanical
+- The changes are fully specified with exact code to write (no design judgment needed)
+
+### Model Presets
+
+Always present 3 presets in Step 4, regardless of plan size:
+
+| Preset | Trivial | Standard | Complex | Best when |
+|---|---|---|---|---|
+| **Speed** | haiku | haiku | sonnet | Plan is well-specified, changes are mechanical |
+| **Balanced** | haiku | sonnet | opus | Default — matches complexity to capability |
+| **Quality** | sonnet | opus | opus | Codebase is unfamiliar, tasks are ambiguous |
+
+### Model Dispatch Enforcement
+
+The `model:` parameter is REQUIRED on every Agent tool dispatch — no exception. Omitting it causes the agent to inherit opus from the parent context, defeating the preset system's cost optimization.
+
+## Wave-Building Algorithm
+
+1. **Build a dependency graph (DAG)** where an edge A → B means "task B depends on outputs from task A"
+   - Identify explicit file dependencies: task B reads a file that task A creates
+   - Identify implicit dependencies: task B modifies a module that task A adds to an index/barrel file
+
+2. **Topological sort** the DAG to establish valid execution order
+
+3. **Assign wave numbers:**
+   - Wave 1: all tasks with no dependencies
+   - Wave N+1: all tasks whose dependencies are all in waves ≤ N
+   - Continue until all tasks are assigned
+
+4. **Apply same-file constraint:** If two tasks in Wave N both modify the same file, move the later one (by plan order) to Wave N+1
+
+5. **Apply adaptive wave size cap** (see table below). If a wave exceeds the cap, split the excess into Wave N+0.5 (insert a new wave between N and N+1)
+
+6. **Apply risk spreading:** If a wave contains > 1 high-risk task, move the excess to the next wave
+
+7. **Identify pre-wave trivials:** Trivial tasks that have downstream dependents in Wave 1 should run in the pre-wave. If there is only 1 pre-wave trivial, execute it inline. If there are 2+, dispatch them as a single batch agent (see Batched Trivial Tasks Prompt Template below).
+
+8. **Identify in-wave trivial batches:** Within each wave, if 2 or more tasks are classified Trivial, dispatch them together as a single haiku batch agent rather than executing each inline. A single trivial task in a wave is still executed inline. Same-file ordering rules apply within the batch (see Batched Trivial Tasks Prompt Template below).
+
+## Adaptive Wave Size Cap
+
+Complex tasks count as 2 toward the cap (they consume more context and are more likely to conflict).
+
+| Total remaining tasks | Max agents per wave |
+|---|---|
+| 1–3 | No cap (dispatch all) |
+| 4–8 | 4 |
+| 9–15 | 5 |
+| 16+ | 6 |
+
+On resource-constrained systems or when tasks share mutable state (databases, caches, singletons), reduce to 2–3 regardless of the table.
+
+## Agent Prompt Template
+
+Use this template for every agent dispatch in Step 5b. Fill all placeholders. Never abbreviate the task text or reference the plan file.
+
+```
+You are implementing a single task from a larger plan. Focus only on your assigned task.
+
+## Your Task
+{PASTE FULL TASK TEXT HERE — include title, description, acceptance criteria, and any notes from the plan. Never summarize or paraphrase.}
+
+## Files You May Touch
+{List every file the agent is allowed to create or modify. The agent must not modify files outside this list. If you are unsure of a file name, give the directory and a description.}
+- path/to/file1.ts
+- path/to/file2.ts
+- (new file) path/to/new-file.ts
+
+## Context From Prior Waves
+{Summary of relevant changes already completed. Omit if this is Wave 1. Be specific: "Task 3 created UserService at src/services/user.service.ts with methods getUser(id) and createUser(data)." Not: "Task 3 was completed."}
+
+## Completion Checklist (fill every line)
+
+```
+COMPLETE: files_created=[list or none] files_modified=[list or none] tests_added=[yes|no|n/a] tests_pass=[yes|no|n/a] build_pass=[yes|no|n/a]
+VERIFY: <symbol_name> in <file_path>
+STATUS: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
+```
+
+**Status definitions:**
+- **DONE** — task complete, no issues
+- **DONE_WITH_CONCERNS** — task complete but you have doubts about correctness or approach; add explanation below the checklist block
+- **NEEDS_CONTEXT** — cannot complete without additional information; describe what you need below the checklist block
+- **BLOCKED** — cannot complete the task; describe the blocker and what you tried below the checklist block
+
+For `VERIFY`, use the primary symbol you added or modified (function name, class name, config key, or constant). The orchestrator greps for this symbol to confirm your changes persisted in the filesystem.
+
+## When You're in Over Your Head
+
+It is always OK to stop and report BLOCKED. Bad work is worse than no work.
+
+**STOP and report BLOCKED when:**
+- The task requires architectural decisions with multiple valid approaches
+- You need to understand code beyond what was provided and can't find clarity
+- You feel uncertain about whether your approach is correct
+- You've been reading files trying to understand the system without progress
+
+The orchestrator can provide more context, escalate to a more capable model, break the task into smaller pieces, or escalate to the user.
+
+## Hard Constraints
+- Do NOT read the plan file — all task information is provided above
+- Do NOT modify files outside the "Files You May Touch" list
+- **Use the Edit tool exclusively for all file modifications.** Never use bash sed, awk, perl, Python scripts, Go programs, or any other indirect method to patch files. If a file needs changing, use Edit. No exceptions.
+- If you encounter a genuine blocker, report it clearly rather than guessing or hallucinating an implementation
+- Do not add features, refactor, or clean up code beyond what the task requires
+
+## Before Reporting: Self-Review
+
+Review your work before reporting. Check:
+
+**Completeness:**
+- Did you implement everything the task specifies?
+- Are there edge cases you didn't handle?
+
+**Discipline:**
+- Did you only modify files in the "Files You May Touch" list?
+- Did you avoid adding features, refactoring, or cleanup beyond the task scope?
+- Did you use the Edit tool for every file modification (not bash/sed/awk)?
+
+**Verification:**
+- Did you run the verification steps specified in the task?
+- Do the results confirm your changes work?
+
+If you find issues during self-review, fix them before reporting.
+
+## Execution Context
+- Assigned model: {MODEL — haiku, sonnet, or opus}
+- Permission mode: bypassPermissions (set explicitly on this agent — do not change).
+- Attempt: {first attempt | retry N — previous attempt failed: {failure description}}
+- {If model was escalated: "Model escalated from {previous-model} to {this-model} due to prior failure."}
+```
+
+## Batched Trivial Tasks Prompt Template
+
+Use this template when dispatching 2+ trivial tasks as a single batch agent. Fill all placeholders. Tasks are listed sequentially; the agent completes them in order.
+
+~~~
+You are implementing a batch of trivial tasks from a larger plan. Complete all tasks in the order listed. Each task is small and self-contained.
+
+## Tasks (complete in order)
+
+### Task {N}: {TASK TITLE}
+{PASTE FULL TASK TEXT — include description, acceptance criteria, notes. Never summarize.}
+
+Files you may touch for this task:
+- path/to/file1
+- path/to/file2
+
+---
+
+### Task {N+1}: {TASK TITLE}
+{PASTE FULL TASK TEXT}
+
+Files you may touch for this task:
+- path/to/file3
+
+---
+
+(repeat for each task in the batch)
+
+## Ordering Constraints
+{List any same-file ordering requirements. Example: "Task 2 must complete before Task 3 — both modify config.ts and Task 3 depends on the key Task 2 adds." If none, write "None."}
+
+## Context From Prior Waves
+{Summary of relevant changes already completed. Omit if Wave 1. Be specific about interfaces, exports, and file locations.}
+
+## Before Reporting: Self-Review (Quick)
+For each task:
+- Did you implement everything specified?
+- Did you use the Edit tool exclusively (no bash/sed/awk)?
+- Did you stay within the allowed file list?
+
+## Expected Output
+For each task, report:
+1. Task title
+2. Files created or modified (one-line summary per file)
+3. Status: SUCCESS | DONE_WITH_CONCERNS | FAILED
+4. If DONE_WITH_CONCERNS: brief description of the concern
+5. If FAILED: what went wrong and what was completed before failure
+
+## Hard Constraints
+- Complete tasks in the listed order
+- Do NOT modify files outside each task's "Files you may touch" list
+- **Use the Edit tool exclusively for all file modifications.** Never use bash sed, awk, perl, Python scripts, Go programs, or any other indirect method to patch files. If a file needs changing, use Edit. No exceptions.
+- If one task fails, continue to the next — do not stop the batch
+- Report per-task status even if some tasks fail
+- Do not add features, refactor, or clean up beyond what each task requires
+
+## Verification Tokens
+After completing all tasks, report one verification token per task on its own line:
+```
+VERIFY Task {N}: <symbol_name> in <file_path>
+```
+Use the primary symbol added or modified in each task. The orchestrator greps for these symbols to confirm changes persisted.
+
+## Execution Context
+- Assigned model: {MODEL — haiku, sonnet, or opus}
+- Permission mode: bypassPermissions (set explicitly on this agent — do not change).
+- Attempt: {first attempt | retry N — previous attempt failed: {failure description}}
+- {If model was escalated: "Model escalated from {previous-model} to {this-model} due to prior failure."}
+~~~
+
+## Common Dependency Patterns
+
+These implicit dependencies are easy to miss:
+
+| Scenario | Dependency |
+|---|---|
+| Task A creates a new module; Task B adds it to an index/barrel file | B depends on A |
+| Task A defines a TypeScript type; Task B uses that type | B depends on A |
+| Task A creates a database table; Task B seeds or queries it | B depends on A |
+| Task A adds a config key; Task B reads that config key | B depends on A |
+| Task A adds a route handler; Task B adds middleware that wraps all routes | Depends on order — check the framework's middleware registration semantics |
+| Task A writes a test fixture; Task B writes tests that use that fixture | B depends on A |

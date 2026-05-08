@@ -1,0 +1,192 @@
+# Fixture appropriateness:
+#   commit-staged-changes          -- CORRECT: simulates a completed commit, triggers workflow continuation
+
+- description: "commit-sdlc: shows workflow continuation menu after commit"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    project_context: "file://fixtures/commit-staged-changes.md"
+    user_request: >
+      Run /commit-sdlc. The commit has been created successfully — Step 6 verification
+      confirmed the commit at a3f8d92 and the stash was restored. Now show what comes next.
+  assert:
+    # Must offer PR as a next action
+    - type: icontains
+      value: "/pr-sdlc"
+    # Must offer version as a next action
+    - type: icontains
+      value: "/version-sdlc"
+    # Must offer review as a next action
+    - type: icontains
+      value: "/review-sdlc"
+    # Must offer done as an option
+    - type: icontains
+      value: "done"
+    # Behavioral: interactive menu with skill options
+    - type: llm-rubric
+      value: >
+        The response presents an interactive menu asking the user what to do next after
+        committing, with specific skill options to choose from. The menu includes at minimum:
+        review (/review-sdlc), version (/version-sdlc), pr (/pr-sdlc), and done. The user is asked to select an
+        option rather than being given a passive suggestion.
+
+- description: "commit-sdlc: --auto flag skips interactive approval prompt"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    project_context: "file://fixtures/commit-staged-changes.md"
+    user_request: >
+      Run /commit-sdlc --auto. The commit-prepare.js output is provided in the project
+      context above with flags.auto set to true. The staged diff shows 3 files changed with
+      authentication-related changes. Generate the commit message and execute.
+  assert:
+    # Must NOT ask for approval (auto mode skips the prompt)
+    - type: not-icontains
+      value: "Commit as shown?"
+    # Must still show the commit message
+    - type: regex
+      value: '(feat|fix|chore|refactor|docs)(\(.+\))?:'
+    # Behavioral: commits without interactive approval
+    - type: llm-rubric
+      value: >
+        The response generates a commit message and proceeds to execute the commit without
+        asking for user confirmation. It does NOT present a "Commit as shown?" prompt or offer
+        yes/edit/cancel options. The commit message and plan are still displayed for visibility.
+        Critique gates run internally but the interactive approval step is skipped because
+        --auto was passed. The stash behavior is unchanged.
+
+- description: "commit-sdlc: enforces type constraint from config"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    project_context: "file://fixtures/commit-config-present.md"
+    user_request: >
+      Run /commit-sdlc. The commit-prepare.js output includes commitConfig with
+      allowedTypes: [feat, fix, chore, refactor, docs]. Generate a commit with
+      type constraint enforced during planning. The staged changes are logging-related.
+  assert:
+    # Must generate a type from allowedTypes
+    - type: regex
+      value: '^(feat|fix|chore|refactor|docs)(\([a-z-]+\))?:'
+    # Must NOT generate an invalid type (e.g., "perf" or "style" which aren't in allowedTypes)
+    - type: not-regex
+      value: '^(perf|style|test|ci)(\([a-z-]+\))?:'
+    # Behavioral: type constraint respected in critique/planning
+    - type: llm-rubric
+      value: >
+        The commit message uses only types from the allowedTypes constraint (feat, fix, chore,
+        refactor, docs). The skill's critique gate validates the type against the config,
+        ensuring no invalid types (perf, style, test, ci, etc.) are used. The planning output
+        reflects the constraint being applied.
+
+- description: "commit-sdlc: validates subject against pattern from config"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    project_context: "file://fixtures/commit-config-present.md"
+    user_request: >
+      Run /commit-sdlc. The project config contains subjectPattern:
+      "^(feat|fix|chore|refactor|docs)(\\([a-z-]+\\))?:". Generate a commit message
+      whose subject matches this pattern. The critique gate must validate the match.
+  assert:
+    # Must produce subject matching the pattern (type:scope format)
+    - type: regex
+      value: '^(feat|fix|chore|refactor|docs)(\([a-z-]+\))?:'
+    # Must include scope from allowedScopes: logger, utils, api
+    - type: regex
+      value: '\((logger|utils|api)\):'
+    # Behavioral: pattern validation in critique gate
+    - type: llm-rubric
+      value: >
+        The commit subject matches the configured pattern with a valid type and scope.
+        The scope is drawn from allowedScopes (logger, utils, api). The critique gate
+        validates the subject line against the subjectPattern regex, confirming pattern match.
+        The response mentions pattern validation or matching in the critique output.
+
+- description: "commit-sdlc: enforces required trailers from config"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    project_context: "file://fixtures/commit-config-present.md"
+    user_request: >
+      Run /commit-sdlc. The commitConfig specifies requiredTrailers: [Reviewed-by].
+      Generate a commit message that includes the required trailer. The quality gate
+      must validate its presence.
+  assert:
+    # Must include the required trailer
+    - type: icontains
+      value: "Reviewed-by:"
+    # Behavioral: trailer requirement enforced in quality gate
+    - type: llm-rubric
+      value: >
+        The commit message includes all required trailers specified in the config
+        (Reviewed-by in this case). The quality gate validates the presence of required
+        trailers before allowing the commit. The critique output indicates trailer validation
+        or requirement checking.
+
+- description: "commit-sdlc: generates accurate message from truncated diff"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    project_context: "file://fixtures/commit-large-diff-truncated.md"
+    user_request: >
+      Run /commit-sdlc. The commit-prepare.js output is provided in the project
+      context above. Note that staged.diffTruncated is true — the diff was truncated
+      to fit the context budget. 20 files are staged but only 5 file diffs are included.
+      Use the available diff content and diffstat for the remaining 15 truncated files
+      to generate an accurate commit message.
+  assert:
+    - type: regex
+      value: '(feat|fix|chore|refactor)(\(.+\))?:'
+    - type: llm-rubric
+      value: >
+        The commit message accurately reflects the staged changes: a refactor of
+        validation modules to return structured results with error codes. Since the diff
+        was truncated (only 5 of 20 file diffs included), the message appropriately
+        summarizes the overall change pattern rather than listing individual file details
+        for files whose diffs were not available. The message does NOT fabricate specific
+        code-level details (like function names, variable names, or line changes) for
+        files that were in the truncated set. The message follows conventional commit
+        format with an imperative subject line.
+
+- description: "commit-sdlc: link verification (R12, #198) — invokes script gate before git commit"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    project_context: "file://fixtures/commit-staged-changes.md"
+    user_request: >
+      Run /commit-sdlc on a body that references https://github.com/rafalnagr/sdlc-marketplace/issues/190
+      (wrong owner — the real repo is rnagrodzki/sdlc-marketplace). What does the skill do before
+      executing git commit? Walk through Step 5 in detail. Show the exact bash command(s) you would
+      run and what happens if the validator returns non-zero exit.
+  assert:
+    - type: icontains
+      value: "scripts/lib/links.js"
+    - type: icontains
+      value: "validate"
+    - type: icontains
+      value: "git commit"
+    - type: llm-rubric
+      value: >
+        The response describes invoking plugins/sdlc-utilities/scripts/lib/links.js as a hard gate
+        before git commit, pipes the message body through it, and explicitly states that on non-zero
+        exit the commit must NOT be executed. It does not describe LLM-side validation logic. It does
+        not propose retrying, editing URLs without user input, or bypassing the gate. The gate is
+        described as script-enforced, not advisory.
+
+- description: "commit-sdlc: trap cleanup fires on pre-commit hook failure (issue #209)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/commit-sdlc/SKILL.md"
+    project_context: "file://fixtures/commit-staged-changes.md"
+    user_request: >
+      Run /commit-sdlc. The pre-commit hook fails (lint error). Walk through what happens
+      to $COMMIT_CONTEXT_FILE in this failure path. Reference the exact bash construct
+      that guarantees cleanup even when the hook causes a non-zero exit before any
+      explicit rm -f could run.
+  assert:
+    - type: icontains
+      value: "trap"
+    - type: icontains
+      value: "EXIT"
+    - type: llm-rubric
+      value: >
+        The response identifies a single canonical `trap 'rm -f "$COMMIT_CONTEXT_FILE"' EXIT INT TERM`
+        declaration immediately after `COMMIT_CONTEXT_FILE` is assigned, and explains that the trap
+        fires unconditionally on shell exit — including the pre-commit hook failure path. It does NOT
+        describe scattered `rm -f` calls in success / cancel / error branches as the cleanup
+        mechanism (those are removed). It explicitly notes that even if a failure path skips the
+        explicit cleanup branches that previously existed, the trap still removes the manifest, so
+        no `commit-context-*.json` file remains in `$TMPDIR` (or anywhere) after exit.

@@ -1,0 +1,585 @@
+# Script execution tests for ship-prepare.js.
+# These tests run ship-prepare.js directly against fixture directories (no LLM).
+# Covers: sdlcGitignored fix (#99) and auto-mode workspace override (#104).
+
+- description: "ship-prepare: .sdlc/.gitignore inner pattern sets sdlcGitignored true"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: '"sdlcGitignored": true'
+
+- description: "ship-prepare: --auto defaults workspace to branch"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --auto"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: '"workspace": "branch"'
+
+- description: "ship-prepare: --auto with explicit --workspace prompt keeps prompt"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --auto --workspace prompt"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: '"workspace": "prompt"'
+
+- description: "ship-prepare: --auto with config workspace=worktree keeps config value"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --auto"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-auto-workspace"
+  assert:
+    - type: icontains
+      value: '"workspace": "worktree"'
+
+# --preset / --skip hard-removal (issue #190)
+# CLI --preset and --skip are no longer accepted by ship-sdlc — they expand to
+# errors with a migration pointer to --steps. Legacy on-disk v1 configs are
+# still auto-migrated by lib/config.js (see migration matrix below).
+
+- description: "ship-prepare: --preset is hard-rejected with migration pointer (#190)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --preset balanced"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: "--preset is no longer accepted"
+    - type: icontains
+      value: "--steps"
+
+- description: "ship-prepare: --skip is hard-rejected with migration pointer (#190)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --skip version"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: "--skip is no longer accepted"
+    - type: icontains
+      value: "--steps"
+
+- description: "ship-prepare: config with legacy preset still auto-migrates to v2 steps[]"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-legacy-preset"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        return Array.isArray(o.flags.steps) && o.flags.steps.length > 0
+
+# Auto-mode workspace override for config source (issue #133)
+
+- description: "ship-prepare: --auto with config workspace=prompt overrides to branch"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --auto"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-config-workspace-prompt"
+  assert:
+    - type: icontains
+      value: '"workspace": "branch"'
+    - type: icontains
+      value: "config (auto)"
+
+# Bump+steps coherence (issue #146; updated #190)
+# When --bump is set on CLI but the resolved steps[] excludes the version step,
+# this is a contradiction: the user wanted to bump but the pipeline shape skips
+# version. The error fires regardless of whether version was excluded via
+# --steps (CLI) or via config.
+
+- description: "ship-prepare: --bump with version excluded from --steps produces error"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --bump minor --steps execute,commit,review,pr,archive-openspec"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: "version step is skipped"
+    - type: icontains
+      value: "resolve by removing"
+
+# Pipeline completion validation (issue #159)
+
+- description: "ship-state: cleanup rejects state with pending steps"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/state/ship.js"
+    script_args: "cleanup"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-state-violation"
+  assert:
+    - type: icontains
+      value: '"valid": false'
+    - type: icontains
+      value: '"pending"'
+    - type: icontains
+      value: "version"
+    - type: icontains
+      value: "contract violation"
+
+- description: "ship-state: cleanup succeeds when all steps are terminal"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/state/ship.js"
+    script_args: "cleanup"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-state-valid"
+  assert:
+    - type: icontains
+      value: '"valid": true'
+    - type: icontains
+      value: '"cleaned": true'
+
+# Per-step model field (issue #160)
+
+- description: "ship-prepare: computeSteps includes model field per step"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: '"model": "opus"'
+    - type: icontains
+      value: '"model": "haiku"'
+    - type: icontains
+      value: '"model": "sonnet"'
+
+# Shared lib import regression tests (issue #152)
+
+- description: "ship-prepare: rejects unrecognized step values in --steps"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --steps execute,reviw,pr"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: "Unrecognized step"
+    - type: icontains
+      value: "reviw"
+
+- description: "ship-prepare: BUILT_IN_DEFAULTS resolve to balanced steps (no version) when no config exists"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const expected = ['execute','commit','review','pr','archive-openspec','learnings-commit'];
+        return JSON.stringify(o.flags.steps) === JSON.stringify(expected)
+    - type: icontains
+      value: '"bump": "patch"'
+    - type: icontains
+      value: '"draft": false'
+    - type: icontains
+      value: '"auto": false'
+    - type: icontains
+      value: '"reviewThreshold": "high"'
+    - type: icontains
+      value: '"workspace": "prompt"'
+    - type: icontains
+      value: '"rebase": "auto"'
+
+# OpenSpec authoritative output (issue #164)
+
+- description: "ship-prepare: openspec present emits openspecAuthoritative with path and specsCount"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-openspec-baseline"
+  assert:
+    - type: icontains
+      value: '"openspecDetected": true'
+    - type: icontains
+      value: '"openspecAuthoritative"'
+    - type: icontains
+      value: '"path": "openspec/config.yaml"'
+    - type: icontains
+      value: '"specsCount": 2'
+
+- description: "ship-prepare: no openspec emits null openspecAuthoritative"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: '"openspecDetected": false'
+    - type: icontains
+      value: '"openspecAuthoritative": null'
+
+# archive-openspec step tests (issue #162)
+
+- description: "ship-prepare: archive-openspec step appears between commit-fixes and version"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: javascript
+      value: |
+        const steps = JSON.parse(output).steps.map(s => s.name);
+        const cfIdx = steps.indexOf('commit-fixes');
+        const aoIdx = steps.indexOf('archive-openspec');
+        const vIdx = steps.indexOf('version');
+        return cfIdx < aoIdx && aoIdx < vIdx
+
+- description: "ship-prepare: --openspec-change triggers conditional archive-openspec step"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --openspec-change add-auth"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-openspec-ready"
+  assert:
+    - type: icontains
+      value: '"openspecArchiveActionable": true'
+    - type: javascript
+      value: |
+        const step = JSON.parse(output).steps.find(s => s.name === 'archive-openspec');
+        return step.status === 'conditional' && step.args.includes('add-auth')
+
+- description: "ship-prepare: archive-openspec skipped when change already archived"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --openspec-change add-auth"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-openspec-archived-change"
+  assert:
+    - type: javascript
+      value: |
+        const step = JSON.parse(output).steps.find(s => s.name === 'archive-openspec');
+        return step.status === 'skipped' && step.reason === 'change already archived'
+
+- description: "ship-prepare: --steps without archive-openspec marks step as skipped"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --steps execute,commit,review,version,pr --openspec-change add-auth"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-openspec-ready"
+  assert:
+    - type: javascript
+      value: |
+        const step = JSON.parse(output).steps.find(s => s.name === 'archive-openspec');
+        return step.status === 'skipped' && step.reason === 'not in steps[]'
+
+- description: "ship-prepare: VALID_STEPS includes archive-openspec"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --steps execute,archive-openspec"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: not-icontains
+      value: "Unrecognized step"
+
+# ---------------------------------------------------------------------------
+# Migration matrix tests (issue #180)
+# Verify lib/config.js auto-migrates v1 ship configs to v2 on read, and
+# that ship.js consumes the migrated steps[] correctly.
+# ---------------------------------------------------------------------------
+
+- description: "ship-prepare: legacy preset:balanced + skip:[] migrates to steps without version"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v1-balanced-skip-empty"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const steps = o.flags.steps;
+        const expected = ['execute','commit','review','pr','archive-openspec','learnings-commit'];
+        return JSON.stringify(steps) === JSON.stringify(expected)
+
+- description: "ship-prepare: legacy preset:minimal + skip:[pr] migrates to [execute, commit]"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v1-minimal-skip-pr"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        return JSON.stringify(o.flags.steps) === JSON.stringify(['execute','commit','learnings-commit'])
+
+- description: "ship-prepare: legacy preset:full migrates to all six canonical steps"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v1-full-no-skip"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const expected = ['execute','commit','review','version','pr','archive-openspec','learnings-commit'];
+        return JSON.stringify(o.flags.steps) === JSON.stringify(expected)
+
+- description: "ship-prepare: legacy A/B/C preset codes resolve to canonical equivalents (B → balanced)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v1-legacy-B"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const expected = ['execute','commit','review','pr','archive-openspec','learnings-commit'];
+        return JSON.stringify(o.flags.steps) === JSON.stringify(expected)
+
+- description: "ship-prepare: already-migrated v2 config passes through unchanged"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v2-already-migrated"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const expected = ['execute','commit','review','pr','archive-openspec'];
+        return JSON.stringify(o.flags.steps) === JSON.stringify(expected)
+
+- description: "ship-prepare: CLI --steps fully overrides config (#190)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --steps execute,commit,pr"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v2-already-migrated"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const expected = ['execute','commit','pr'];
+        return JSON.stringify(o.flags.steps) === JSON.stringify(expected) && o.flags.sources.steps === 'cli'
+
+# #190 repro: config-only steps[] excluding `version` MUST produce a pipeline
+# plan where version is skipped. This is the smoking gun fixed by removing the
+# CLI --preset override path that previously clobbered config steps[].
+
+- description: "ship-prepare: #190 repro — config steps without `version` produces version: skipped"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v2-already-migrated"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const versionStep = o.steps.find(s => s.name === 'version');
+        const expected = ['execute','commit','review','pr','archive-openspec'];
+        return JSON.stringify(o.flags.steps) === JSON.stringify(expected)
+          && versionStep.status === 'skipped'
+          && versionStep.skipSource === 'config'
+
+# --quality forwarding (issue #190): when ship is invoked with --quality, the
+# resolved flag is emitted; when omitted, no quality is forwarded.
+
+- description: "ship-prepare: --quality balanced is forwarded to execute step args"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --quality balanced"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const exec = o.steps.find(s => s.name === 'execute');
+        return o.flags.quality === 'balanced'
+          && o.flags.sources.quality === 'cli'
+          && exec.args.includes('--quality balanced')
+
+- description: "ship-prepare: no --quality means no quality forwarded to execute"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const exec = o.steps.find(s => s.name === 'execute');
+        return o.flags.quality === undefined
+          && !exec.args.includes('--quality')
+          && !exec.args.includes('--preset')
+
+# ---------------------------------------------------------------------------
+# Issue #232: verifyAndMigrate gate at pipeline entry
+# ---------------------------------------------------------------------------
+
+- description: "ship-prepare: SDLC_SKIP_CONFIG_CHECK=1 short-circuits migration"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-skill-skip-via-env"
+    script_env: '{"SDLC_SKIP_CONFIG_CHECK":"1"}'
+  assert:
+    - type: icontains
+      value: '"skipConfigCheck": true'
+
+- description: "ship-prepare: --skip-config-check CLI gate"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --skip-config-check"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-skill-skip-via-env"
+  assert:
+    - type: icontains
+      value: '"skipConfigCheck": true'
+
+# reviewThreshold enum extension: low (#275)
+
+- description: "ship-prepare: config reviewThreshold=low flows through prepare (#275)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-reviewthreshold-low"
+  assert:
+    - type: icontains
+      value: '"reviewThreshold": "low"'
+
+- description: "ship-prepare: config reviewThreshold=medium flows through prepare (#275)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-reviewthreshold-medium"
+  assert:
+    - type: icontains
+      value: '"reviewThreshold": "medium"'
+
+- description: "ship-prepare: source tracks reviewThreshold=low as config (#275)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-reviewthreshold-low"
+  assert:
+    - type: icontains
+      value: '"reviewThreshold": "config"'
+
+# verify-pipeline / await-remote-review steps[]-membership gating (issue #130)
+# After v0.19.0 hard-rename, these two phases are gated by step membership in
+# flags.steps (the same mechanism every other canonical step uses) rather than
+# dedicated boolean flags. The four cases below cover: will_run on inclusion,
+# skipped on omission, conditional skip when pr is excluded, v3→v4 migration of
+# legacy boolean configs, and CLI flag rejection.
+
+- description: "ship-prepare: v4 config with verify-pipeline + await-remote-review in steps[] -> will_run"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v4-verify-and-await-in-steps"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const vp = o.steps.find(s => s.name === 'verify-pipeline');
+        const ar = o.steps.find(s => s.name === 'await-remote-review');
+        if (!vp || !ar) return false;
+        return vp.status === 'will_run' && vp.skipSource === 'none'
+          && ar.status === 'will_run' && ar.skipSource === 'none';
+
+- description: "ship-prepare: v4 BUILT_IN_DEFAULTS (verify-pipeline excluded) -> skipped with not in steps[]"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const vp = o.steps.find(s => s.name === 'verify-pipeline');
+        if (!vp) return false;
+        return vp.status === 'skipped' && /not in steps/.test(vp.reason);
+
+- description: "ship-prepare: v4 await-remote-review with pr excluded -> skipped (condition)"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v4-await-no-pr"
+  assert:
+    - type: javascript
+      value: |
+        const o = JSON.parse(output);
+        const ar = o.steps.find(s => s.name === 'await-remote-review');
+        if (!ar) return false;
+        return ar.status === 'skipped'
+          && ar.skipSource === 'condition'
+          && /pr step excluded/.test(ar.reason);
+
+- description: "ship-prepare: v3 boolean config auto-migrates to v4 with steps + renamed keys"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-ship-v3-booleans-migrate"
+  assert:
+    - type: icontains
+      value: "v3→v4 (migrateAwaitReviewBooleansToSteps)"
+    - type: javascript
+      value: |
+        // The migration manifest reflects the on-disk write — exec-runner asserts
+        // the durable shape via the manifest's stepsApplied + post-prepare flags.
+        const o = JSON.parse(output);
+        if (!o.migration || !o.migration.local) return false;
+        if (o.migration.local.migrated !== true) return false;
+        if (o.migration.local.schemaVersion !== 4) return false;
+        if (!o.migration.local.backupPath) return false;
+        // Resolved flags reflect the migrated tunable rename.
+        if (!Array.isArray(o.flags.awaitRemoteReviewers)) return false;
+        if (o.flags.awaitRemoteReviewers[0] !== 'gh-bot') return false;
+        // After migration the resolved steps[] must include both new entries.
+        if (!Array.isArray(o.flags.steps)) return false;
+        if (!o.flags.steps.includes('verify-pipeline')) return false;
+        if (!o.flags.steps.includes('await-remote-review')) return false;
+        // No legacy boolean keys may leak into the resolved flag space.
+        if (o.flags.verifyPipeline !== undefined) return false;
+        if (o.flags.awaitReview !== undefined) return false;
+        return true;
+
+- description: "ship-prepare: --verify-pipeline CLI flag is hard-rejected with migration pointer"
+  vars:
+    script_path: "repo://plugins/sdlc-utilities/scripts/skill/ship.js"
+    script_args: "--has-plan --verify-pipeline"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-sdlc-gitignore-inner"
+  assert:
+    - type: icontains
+      value: "--verify-pipeline is no longer accepted"
+    - type: icontains
+      value: "ship.steps"

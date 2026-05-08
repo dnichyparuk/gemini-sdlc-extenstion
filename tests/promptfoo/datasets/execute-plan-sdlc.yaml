@@ -1,0 +1,194 @@
+# Fixture appropriateness:
+#   plan-execution-complete        -- CORRECT: simulates completed plan execution, triggers workflow continuation
+#   feature-branch-with-commits   -- CORRECT: provides branch context for plan execution with --quality
+#   plan-execution-with-guardrails -- CORRECT: provides execution guardrails context for guardrail evaluation testing
+
+- description: "execute-plan-sdlc: shows workflow continuation menu after plan execution"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-execution-complete.md"
+    user_request: >
+      Run /execute-plan-sdlc. The plan execution has completed — all waves finished, all tasks
+      succeeded, and final verification passed. The Step 9 summary report has been presented.
+      Now show what comes next.
+  assert:
+    # Must offer commit as a next action
+    - type: icontains
+      value: "/commit-sdlc"
+    # Must offer PR as a next action
+    - type: icontains
+      value: "/pr-sdlc"
+    # Must offer version as a next action
+    - type: icontains
+      value: "/version-sdlc"
+    # Must offer done as an option
+    - type: icontains
+      value: "done"
+    # Behavioral: interactive menu with skill options
+    - type: llm-rubric
+      value: >
+        The response presents an interactive menu asking the user what to do next after plan
+        execution, with specific skill options to choose from. The menu includes at minimum:
+        commit (/commit-sdlc), review (/review-sdlc), version (/version-sdlc), pr (/pr-sdlc),
+        and done. The user is asked to select an option rather than being given a passive suggestion.
+
+- description: "execute-plan-sdlc: skips quality-tier selection when --quality balanced is provided"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-with-commits.md"
+    user_request: >
+      Run /execute-plan-sdlc --quality balanced. A plan with 5 tasks has been loaded and
+      validated. Task classification and wave building are complete. Show the wave structure
+      and proceed with the Balanced quality tier applied automatically.
+  assert:
+    # Behavioral: applies Balanced tier without interactive selection
+    - type: llm-rubric
+      value: >
+        The response applies the Balanced quality tier (--quality balanced) without
+        presenting the interactive selection menu to the user. It shows the wave structure
+        with model assignments that reflect the Balanced tier (haiku for Trivial, sonnet
+        for Standard, opus for Complex) and proceeds directly to execution. The response
+        does not ask the user to select a quality tier — the selection is already made via
+        the --quality argument. The response uses --quality (not --preset).
+
+- description: "execute-plan-sdlc: loads execution guardrails from config and evaluates during execution"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-execution-with-guardrails.md"
+    user_request: >
+      Run /execute-plan-sdlc --quality balanced. A plan with 4 tasks has been loaded and validated.
+      The project has execution guardrails configured in .claude/sdlc.json under execute.guardrails.
+      Show how guardrails are loaded and describe how they will be evaluated during execution.
+  assert:
+    - type: icontains
+      value: "execution guardrails"
+    - type: icontains
+      value: "guardrail"
+    - type: llm-rubric
+      value: >
+        The response acknowledges that execution guardrails are configured and loaded from the
+        execute section of .claude/sdlc.json (not the plan section). It describes or references
+        guardrail evaluation at pre-wave (5a-pre) and/or post-wave (5c-ter) checkpoints.
+        The response distinguishes execution guardrails from plan guardrails.
+
+- description: "execute-plan-sdlc: proceeds normally when no execution guardrails configured"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-execution-complete.md"
+    user_request: >
+      Run /execute-plan-sdlc --quality balanced. A plan has been loaded. No execution guardrails are
+      configured in the project. Show how the execution proceeds.
+  assert:
+    - type: not-icontains
+      value: "guardrail violation"
+    - type: llm-rubric
+      value: >
+        The response proceeds with normal plan execution without blocking on guardrails.
+        It may mention "No execution guardrails configured" but does not show guardrail
+        evaluation steps or guardrail violations. Execution flows through the standard
+        wave dispatch, verification, and reporting steps.
+
+- description: "execute-plan-sdlc: model parameter required on every agent dispatch per quality tier"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-with-commits.md"
+    user_request: >
+      Run /execute-plan-sdlc --quality balanced. A plan with 5 tasks (2 Trivial, 2 Standard,
+      1 Complex) is ready. Show the wave structure with model assignments and how
+      agents will be dispatched.
+  assert:
+    - type: icontains
+      value: "model"
+    - type: regex
+      value: "(haiku|sonnet|opus)"
+    - type: llm-rubric
+      value: >
+        The response shows wave structure with explicit model assignments per task:
+        Trivial=haiku, Standard=sonnet, Complex=opus (Balanced quality tier). The
+        dispatch includes model: as a required parameter for each agent.
+
+# OpenSpec post-pipeline archive suggestion tests (issue #162)
+
+- description: "execute-plan-sdlc: emits archive suggestion when OpenSpec plan and validation passes"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-execution-complete.md"
+    user_request: >
+      Run /execute-plan-sdlc. The plan execution has completed — all waves finished, all tasks
+      succeeded, and final verification passed. The plan's **Source:** header points to
+      openspec/changes/add-auth/. The openspecSpecs were loaded in Step 1.
+      validateChangeStrict returned { ok: true, cliAvailable: true }.
+      Now show the What's Next section.
+  assert:
+    - type: icontains
+      value: "archive"
+    - type: icontains
+      value: "/ship-sdlc"
+    - type: llm-rubric
+      value: >
+        The response emits a post-pipeline suggestion that includes archiving the OpenSpec
+        change (mentioning openspec archive or /ship-sdlc). The suggestion is presented as
+        informational — NOT auto-executed. The response acknowledges validation passed.
+
+- description: "execute-plan-sdlc: suppresses archive suggestion when validation fails"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-execution-complete.md"
+    user_request: >
+      Run /execute-plan-sdlc. The plan execution has completed — all waves finished.
+      The plan's **Source:** header points to openspec/changes/add-auth/.
+      validateChangeStrict returned { ok: false, cliAvailable: true, stderr: "Missing required delta spec" }.
+      Now show the What's Next section.
+  assert:
+    - type: not-icontains
+      value: "openspec archive"
+    - type: icontains
+      value: "validation"
+    - type: llm-rubric
+      value: >
+        The response surfaces the validation failure output (mentioning the error or that
+        validation failed) and does NOT suggest running openspec archive. It may suggest
+        fixing the validation issues first.
+
+- description: "execute-plan-sdlc: falls back to static advisory when CLI not available"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-execution-complete.md"
+    user_request: >
+      Run /execute-plan-sdlc. The plan execution has completed — all waves finished.
+      The plan's **Source:** header points to openspec/changes/add-auth/.
+      validateChangeStrict returned { ok: false, cliAvailable: false, stderr: "openspec CLI not found on PATH" }.
+      Now show the What's Next section.
+  assert:
+    - type: icontains
+      value: "verify"
+    - type: llm-rubric
+      value: >
+        The response falls back to a static advisory mentioning /opsx:verify and /opsx:archive
+        (or similar non-CLI suggestions) without fabricating a validation result. It does NOT
+        claim validation passed. It may note that the openspec CLI is not available.
+
+- description: "execute-plan-sdlc: Learning Capture writes to log.md before Step 9 REPORT (issue #208)"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/execute-plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/execute-plan-ready.md"
+    user_request: >
+      A 2-task plan has just finished executing. A guardrail was overridden by the
+      user during Wave 1 (so a learning entry should be appended). Walk through
+      Step 8-ter (Learning Capture) and Step 9 (REPORT) in order, narrating exactly
+      what gets written to `.claude/learnings/log.md` and confirming the working
+      tree contains that change BEFORE the final summary is emitted.
+  assert:
+    - type: icontains
+      value: "learnings/log.md"
+    - type: icontains
+      value: "Step 9"
+    - type: llm-rubric
+      value: >
+        The narration shows the Learning Capture append happening in Step 8-ter,
+        BEFORE Step 9 (REPORT) emits the final summary. The response references
+        R27 or paraphrases the ordering rule: the log.md write must be part of
+        the working tree when execute-plan-sdlc returns control, so ship-sdlc's
+        staging window picks it up and the entry lands in the feature commit.
+        The response does NOT describe Learning Capture as running after Step 9
+        or as a standalone post-summary section.

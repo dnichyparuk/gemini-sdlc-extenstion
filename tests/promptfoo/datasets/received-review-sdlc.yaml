@@ -1,0 +1,385 @@
+# Fixture appropriateness:
+#   pr-review-feedback       -- CORRECT: 3 review items (bug, style, incorrect claim) for processing
+#   review-fixes-complete    -- CORRECT: simulates completed fixes, triggers workflow continuation
+
+- description: "received-review-sdlc: processes feedback with technical rigor and pushes back on incorrect claims"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-feedback.md"
+    user_request: >
+      Run /received-review-sdlc. Process the 3 review comments from PR #42.
+      Verify each claim against the codebase context, categorize them, and
+      draft responses.
+  assert:
+    # Must acknowledge the null check bug
+    - type: regex
+      value: "(null|empty string|falsy|query)"
+    # Must NOT use performative openers
+    - type: not-regex
+      value: "(Great catch|You're absolutely right|Thanks for catching|Excellent feedback|Great point)"
+    # Must push back on the incorrect "unused function" claim
+    - type: regex
+      value: "(disagree|incorrect|wrong|actually used|is used|imported)"
+    # Must reference evidence for pushback (the import locations)
+    - type: regex
+      value: "(search\\.ts|indexer\\.ts|imported)"
+    # Behavioral: technical rigor, no performative language, correct categorization
+    - type: llm-rubric
+      value: >
+        The response processes all 3 review comments with technical rigor:
+        (1) Comment 1 (null check bug): categorized as a confirmed bug, agrees and
+        describes the fix — changing `if (query)` to handle empty strings correctly.
+        (2) Comment 2 (rename): categorized as style, agrees to rename `res` to
+        `searchResults`. (3) Comment 3 (unused function claim): categorized as
+        incorrect, pushes back with evidence — the tokenize function IS used, imported
+        in src/routes/search.ts and src/services/indexer.ts. The response does NOT use
+        performative openers like "Great catch!", "You're right!", or "Thanks for
+        catching". Responses start with substance (the technical issue), not social
+        filler. The pushback on Comment 3 cites specific code locations as evidence.
+
+- description: "received-review-sdlc: shows workflow continuation menu after implementing fixes"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/review-fixes-complete.md"
+    user_request: >
+      Run /received-review-sdlc. The accepted review fixes have been implemented,
+      verified, and responses posted to PR #42. The workflow is complete.
+      Now show what comes next.
+  assert:
+    # Must offer commit as a next action
+    - type: icontains
+      value: "/commit-sdlc"
+    # Must offer done as an option
+    - type: icontains
+      value: "done"
+    # Behavioral: interactive menu asking what to do next
+    - type: llm-rubric
+      value: >
+        The response presents an interactive menu asking the user what to do next
+        after implementing review fixes. The menu includes at minimum: commit
+        (/commit-sdlc) and done. The user is asked to select an option rather than
+        being given a passive suggestion.
+
+- description: "received-review-sdlc: incremental mode filters already-addressed comments on re-run"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-incremental.md"
+    user_request: >
+      Run /received-review-sdlc --pr 42. The prepare script manifest is provided in
+      context showing 5 threads: 2 resolved, 1 self-replied, 2 outstanding. Process
+      only the outstanding comments.
+  assert:
+    # Must mention the incremental summary
+    - type: regex
+      value: "(outstanding|unresolved)"
+    # Must mention skipping resolved/replied threads
+    - type: regex
+      value: "(skip|already|resolved|addressed|replied)"
+    # Must NOT process the resolved comments (null check, rename)
+    - type: not-regex
+      value: "(null check.*will fix|rename.*res.*searchResults)"
+    # Behavioral: only processes outstanding threads
+    - type: llm-rubric
+      value: >
+        The response correctly identifies that only 2 of 5 threads are outstanding
+        and processes only those 2 (the limit parameter validation and the batch size
+        configurability). It acknowledges that 2 threads are resolved and 1 was
+        already replied to, skipping all 3. It does NOT re-analyze or re-evaluate
+        the resolved or self-replied threads.
+
+- description: "received-review-sdlc: presents mandatory PR reply step after implementing fixes"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-reply-step.md"
+    user_request: >
+      Run /received-review-sdlc. The review fixes have been implemented and verified
+      as shown in context. Now proceed to Step 12 — reply to PR threads and resolve
+      addressed ones.
+  assert:
+    # Must show summary of what was done
+    - type: regex
+      value: "(addressed|fixed|implemented)"
+    # Must offer to reply/resolve
+    - type: regex
+      value: "(reply|resolve|thread)"
+    # Must ask for consent before posting
+    - type: regex
+      value: "(yes|skip|selective|proceed|approve)"
+    # Must distinguish between resolved and left-open
+    - type: regex
+      value: "(push.?back|disagree|left open|reviewer)"
+    # Behavioral: presents Step 12 with consent gate
+    - type: llm-rubric
+      value: >
+        The response presents the mandatory PR reply step (Step 12). It summarizes
+        what was done: 2 comments addressed with code changes, 1 comment pushed back.
+        It asks the user for consent before posting any replies to the PR (using
+        AskUserQuestion or equivalent consent gate with options like yes/skip/selective).
+        For addressed comments, it plans to post a reply AND resolve the thread.
+        For the pushback comment, it plans to post the pushback response but NOT
+        resolve the thread (leaving it open for the reviewer).
+
+- description: "received-review-sdlc: all threads resolved reports zero outstanding and skips processing"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-all-resolved.md"
+    user_request: >
+      Run /received-review-sdlc --pr 42 on this project. The received-review-prepare.js
+      output is in the project context.
+  assert:
+    - type: regex
+      value: "(0 outstanding|no outstanding|all.*resolved|nothing.*process)"
+    - type: regex
+      value: "(4 resolved|all 4|4.*skipped)"
+    - type: not-regex
+      value: "(implement.*fix|applying.*change|modifying|editing.*file)"
+    - type: llm-rubric
+      value: >
+        The response reads the prepare script output showing 4 threads, all resolved.
+        It reports 0 outstanding comments and that all 4 were skipped (already resolved).
+        It does NOT attempt to process, re-evaluate, or re-analyze any resolved threads.
+        It does NOT start implementing fixes or editing files. It may suggest re-running
+        if new feedback arrives on the PR.
+
+- description: "received-review-sdlc: missing PR context asks user for PR information"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-no-pr.md"
+    user_request: >
+      Run /received-review-sdlc on this project. No --pr flag was provided.
+  assert:
+    - type: regex
+      value: "(PR.*number|pull request|--pr|provide.*PR|which.*PR)"
+    - type: not-regex
+      value: "(processing.*comment|analyzing.*feedback|implementing.*fix)"
+    - type: llm-rubric
+      value: >
+        The response recognizes that no PR number or review findings are available.
+        It falls back to asking the user for the PR URL, PR number, or to paste review
+        comments directly. It does NOT crash, fabricate feedback to process, or start
+        analyzing non-existent comments. The response is clear about what information
+        is needed to proceed.
+
+- description: "received-review-sdlc: mixed batch handles all verdict types with correct actions"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-mixed-batch.md"
+    user_request: >
+      Run /received-review-sdlc --pr 42 on this project. The received-review-prepare.js
+      output and review comments are in the project context. Process all 4 outstanding
+      comments.
+  assert:
+    - type: regex
+      value: "(pagination|offset|empty array)"
+    - type: regex
+      value: "(request.?ID|correlation|log)"
+    - type: regex
+      value: "(disagree|push.?back|intentional|recall)"
+    - type: regex
+      value: "(out.of.scope|separate.*PR|won.t.fix|acknowledge)"
+    - type: llm-rubric
+      value: >
+        The response processes all 4 comments with correct verdict types:
+        1. Pagination bug (will fix) — acknowledges the bug, plans to fix the offset handling
+        2. Request ID logging (will fix) — agrees to add correlation IDs
+        3. Stemming algorithm (disagree/pushback) — pushes back with evidence that aggressive
+           stemming is intentional for recall, proper nouns handled by exact-match fallback
+        4. Retry logic duplication (acknowledge, won't fix) — acknowledges the observation but
+           flags it as out of scope for this PR, suggests a separate refactoring PR
+        The response groups comments by action type and presents a consent gate before
+        posting replies. Pushback comments are left open for the reviewer (not auto-resolved).
+
+- description: "received-review-sdlc: --auto mode auto-implements will-fix items without consent gate"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/ship-review-critical.md"
+    user_request: >
+      Run /received-review-sdlc --auto. The skill was invoked with --auto from the
+      ship-sdlc pipeline. The prepare script manifest includes flags: { auto: true }.
+      Process the review findings and auto-implement accepted fixes.
+  assert:
+    # Must display the analysis table (SQL injection finding visible)
+    - type: regex
+      value: "(SQL|injection|finding|analysis)"
+    # Must NOT present implement/edit/skip consent gate
+    - type: not-regex
+      value: "(How to proceed|implement.*edit.*skip|Select.*option)"
+    # Must proceed to implement will-fix items
+    - type: regex
+      value: "(implement|fix|apply|proceed|auto)"
+    # Behavioral: auto-proceed for will-fix items, no consent gate
+    - type: llm-rubric
+      value: >
+        The response demonstrates --auto mode behavior: the full analysis table is displayed
+        for visibility (including the SQL injection finding), "will fix" items are
+        auto-implemented without presenting the Step 10 consent gate (no implement/edit/skip
+        prompt). Critique gates (Steps 5-6, 8-9) are still referenced or executed. Items
+        with "disagree" or "won't fix" verdicts are displayed but not auto-actioned.
+
+- description: "received-review-sdlc: without --auto consent gate is mandatory even in pipeline context"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/ship-review-critical.md"
+    user_request: >
+      Run /received-review-sdlc. The skill was invoked from the ship-sdlc pipeline but
+      WITHOUT the --auto flag. The prepare script manifest does NOT include flags.auto.
+      Process the review findings.
+  assert:
+    # Must present implement/edit/skip consent gate
+    - type: regex
+      value: "(implement|edit|skip|proceed|approve)"
+    # Must NOT auto-implement or skip the consent gate
+    - type: not-regex
+      value: "(auto.implement|auto.proceed|skipping consent|bypassing)"
+    # Must NOT reference pipeline context as a reason to bypass
+    - type: not-regex
+      value: "(pipeline.*context.*bypass|auto.*mode.*inferred|ship.*sdlc.*therefore.*auto)"
+    # Behavioral: consent gate fires regardless of pipeline context
+    - type: llm-rubric
+      value: >
+        The response presents the Step 10 consent gate with implement/edit/skip options,
+        requiring explicit user approval before making any changes. The analysis table is
+        displayed. The user is asked to choose how to proceed. Despite being invoked from
+        the ship-sdlc pipeline, the consent gate is NOT skipped and there is no inference
+        that automatic execution is expected. The response does not reference pipeline
+        context as a reason to bypass the consent gate.
+
+- description: "received-review-sdlc: --auto mode auto-executes Step 12 without reply/resolve consent gate"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-reply-step.md"
+    user_request: >
+      Run /received-review-sdlc --auto. The prepare script manifest includes
+      flags: { auto: true }. Review fixes have been implemented and verified.
+      Proceed to Step 12 (reply to PR threads and resolve addressed ones).
+  assert:
+    # Must still display the Step 12 summary
+    - type: regex
+      value: "(addressed|fixed|implemented|summary)"
+    # Must NOT present the yes/skip/selective consent prompt
+    - type: not-regex
+      value: "(yes.*skip.*selective|Should I reply|How to proceed)"
+    # Must proceed to post replies and resolve threads
+    - type: regex
+      value: "(reply|resolve|post|threadId|gh api)"
+    # Must still distinguish resolved vs left-open threads
+    - type: regex
+      value: "(push.?back|disagree|left open|reviewer)"
+    - type: llm-rubric
+      value: >
+        The response demonstrates --auto mode behavior in Step 12: the summary of
+        addressed/pushback/skipped comments is displayed, but the yes/skip/selective
+        AskUserQuestion consent gate is NOT presented. The skill proceeds directly to
+        posting in-thread replies for every action-plan item and resolves only the
+        "agree, will fix" threads via GraphQL mutation. Pushback and "won't fix"
+        threads are replied to but left open for the reviewer. No pipeline-context
+        reasoning is used to justify skipping — the behavior is driven by
+        flags.auto === true from the prepare script manifest.
+
+- description: "received-review-sdlc: link verification (R17, #198) — invokes script gate at Step 11.5 before posting replies"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-reply-step.md"
+    user_request: >
+      One of your drafted reply bodies in Step 7 contains https://github.com/rafalnagr/sdlc-marketplace/issues/190
+      (wrong owner). Walk through Step 11.5 (Link Verification) in detail. Show the exact bash command
+      you would run and what happens if the validator exits non-zero — do you proceed to Step 12?
+  assert:
+    - type: icontains
+      value: "scripts/lib/links.js"
+    - type: icontains
+      value: "Step 12"
+    - type: llm-rubric
+      value: >
+        The response describes invoking plugins/sdlc-utilities/scripts/lib/links.js as a hard gate
+        before Step 12, validates concatenated reply bodies, and explicitly states that on non-zero
+        exit no gh api replies are posted and Step 12 is NOT entered. The gate is script-enforced.
+        The skill does not propose retrying, editing URLs without user input, or bypassing.
+
+# ---------------------------------------------------------------------------
+# Issue #233 — configurable per-severity auto-apply (R18/R19)
+# ---------------------------------------------------------------------------
+
+- description: "received-review-sdlc (#233): R18 bypass — alwaysFixSeverities=['critical'] auto-applies critical 'will fix' without consent"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/received-review-alwaysfix-critical.md"
+    user_request: >
+      Run /received-review-sdlc --pr 233. The prepare manifest has
+      flags.alwaysFixSeverities = ["critical"] resolved from .sdlc/local.json.
+      Thread T1 has severity "critical" with verdict "agree, will fix"; thread T2 has
+      severity "medium" with verdict "agree, will fix". Walk through Step 10 (PRESENT)
+      and explain exactly which finding bypasses the consent gate per R18 and which
+      one still requires explicit `implement` from the user. Show the `fixed: ...`
+      log line you would emit for the bypassed finding.
+  assert:
+    - type: icontains
+      value: "flags.alwaysFixSeverities"
+    - type: icontains
+      value: "R18"
+    - type: regex
+      value: "fixed:"
+    - type: regex
+      value: "(implement|consent|AskUserQuestion|approval)"
+    - type: llm-rubric
+      value: >
+        The response correctly applies the R18 bypass rule: thread T1 (critical, will fix)
+        bypasses the Step 10 consent gate and is auto-applied with a one-line `fixed: ...`
+        log entry; thread T2 (medium, will fix) does NOT bypass — it remains in the
+        per-finding consent gate and requires explicit `implement` from the user. The
+        decision cites flags.alwaysFixSeverities (the prepare-script-resolved field) and
+        does not re-read the configuration file. The bypass is gated on all three of:
+        verdict === "agree, will fix", severity !== null, and severity in the allowlist.
+
+- description: "received-review-sdlc (#233): medium 'will fix' falls through to consent gate when alwaysFixSeverities=['critical']"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/received-review-alwaysfix-critical.md"
+    user_request: >
+      Run /received-review-sdlc --pr 233 (NO --auto). The prepare manifest has
+      flags.alwaysFixSeverities = ["critical"]. Thread T2 has severity "medium" and
+      verdict "agree, will fix". Show how Step 10 handles T2 specifically — present
+      the analysis row, the drafted response, and the AskUserQuestion consent gate.
+      Do NOT auto-apply T2.
+  assert:
+    - type: regex
+      value: "implement"
+    - type: regex
+      value: "(edit|skip)"
+    - type: not-regex
+      value: "fixed:.*(T2|medium|line 42)"
+    - type: icontains
+      value: "Step 10"
+    - type: llm-rubric
+      value: >
+        The response demonstrates that thread T2 (medium severity, "agree, will fix")
+        goes through the Step 10 consent gate normally — the AskUserQuestion prompt
+        with implement/edit/skip options is presented and no auto-apply occurs for T2.
+        The response does NOT emit a `fixed: ...` log line for T2. The decision cites
+        flags.alwaysFixSeverities and notes that "medium" is NOT in the configured
+        allowlist (which contains only "critical"), so the R18 bypass does not apply.
+
+- description: "received-review-sdlc (#233): unset alwaysFixSeverities preserves R9 consent behavior across all findings"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/received-review-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-review-feedback.md"
+    user_request: >
+      Run /received-review-sdlc --pr 42. The prepare manifest has
+      flags.alwaysFixSeverities = [] (default — unset in .sdlc/local.json).
+      Walk through Step 10 (PRESENT) and confirm that ALL findings — regardless of
+      severity — go through the per-finding consent gate. No findings are auto-applied.
+  assert:
+    - type: icontains
+      value: "Step 10"
+    - type: regex
+      value: "implement"
+    - type: not-regex
+      value: "fixed:"
+    - type: llm-rubric
+      value: >
+        With flags.alwaysFixSeverities = [] (default), the response shows that the
+        original R9 consent behavior is fully preserved: every finding (regardless of
+        severity) routes through the Step 10 consent gate (AskUserQuestion with
+        implement/edit/skip options). No finding is auto-applied; no `fixed: ...` log
+        lines are emitted. The decision cites flags.alwaysFixSeverities (empty) and
+        does not re-read the configuration file.

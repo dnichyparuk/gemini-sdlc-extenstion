@@ -1,0 +1,190 @@
+{
+  "version": {
+    "mode": "file",
+    "versionFile": "gemini-extension.json",
+    "fileType": "plugin.json",
+    "tagPrefix": "v",
+    "changelog": true,
+    "changelogFile": "CHANGELOG.md"
+  },
+  "plan": {
+    "guardrails": [
+      {
+        "id": "test-coverage-required",
+        "description": "Every task that creates or modifies source code must include corresponding promptfoo test cases. When existing behavior changes, existing test cases must be updated to reflect the new behavior — not only new tests added. Stale tests that no longer match current intended behavior must be corrected or removed.",
+        "severity": "error"
+      },
+      {
+        "id": "no-ci-bypass",
+        "description": "Plans must not include steps that skip or disable CI checks.",
+        "severity": "error"
+      },
+      {
+        "id": "no-auto-eval",
+        "description": "Full-suite or wide-subset `promptfoo eval` runs remain user-initiated only. A single targeted test case scoped to the changed surface MAY be run as the final verification step. Exec-only configs (no LLM provider) are fully relaxed. Tight-loop retries (run-fix-rerun) are forbidden in all cases.",
+        "severity": "error"
+      },
+      {
+        "id": "skill-docs-required",
+        "description": "Any task that creates `plugins/*/skills/*/SKILL.md` must include matching entries for all four companion artifacts: `docs/specs/<skill-name>.md` (spec), `docs/skills/<skill-name>.md` (reference doc), `README.md` (skills-table row), and `site/src/data/skills-meta.ts` (SkillCard registry). Skill-name is derived from the SKILL.md path's parent directory.",
+        "severity": "error"
+      },
+      {
+        "id": "no-scope-creep",
+        "description": "Tasks must only address stated requirements; no gold-plating.",
+        "severity": "warning"
+      },
+      {
+        "id": "single-responsibility-tasks",
+        "description": "Each task must have exactly one clear deliverable.",
+        "severity": "warning"
+      },
+      {
+        "id": "scripts-over-llm-logic",
+        "description": "When adding or editing skills, prioritize deterministic behavior driven by prepare scripts over complex LLM instructions. Move logic into scripts whenever feasible.",
+        "severity": "error"
+      },
+      {
+        "id": "yagni",
+        "description": "Do not add functionality until it is actually needed. No speculative abstractions, premature generalization, or unused parameters.",
+        "severity": "warning"
+      },
+      {
+        "id": "cross-skill-consistency",
+        "description": "Check consistency with other skills and expand scope to provide a compatibility layer with other skills execution if necessary.",
+        "severity": "error"
+      },
+      {
+        "id": "pr-link-github-issue",
+        "description": "When a change fixes or addresses a GitHub issue, the plan must include linking the issue in the PR (e.g., Fixes #123 or Closes #123).",
+        "severity": "error"
+      },
+      {
+        "id": "dry",
+        "description": "Do not duplicate logic. If the same behavior exists elsewhere, reuse it or extract a shared function. Copy-pasted code blocks across tasks are a plan failure.",
+        "severity": "warning"
+      },
+      {
+        "id": "kiss",
+        "description": "Prefer the simplest implementation that satisfies the requirements. Avoid unnecessary abstractions, premature generalization, and over-engineered solutions.",
+        "severity": "warning"
+      },
+      {
+        "id": "spec-first",
+        "description": "Any task that modifies a skill's behavior (SKILL.md changes) must first update the corresponding spec in docs/specs/<skill-name>.md. The spec is the source of truth — implementation follows spec, not the other way around. Plans that change SKILL.md without a matching spec update task (ordered before the SKILL.md task) fail this guardrail.",
+        "severity": "error"
+      },
+      {
+        "id": "project-agnostic",
+        "description": "Plugin behaviour must work in any consumer project, not only sdlc-marketplace. Tasks that modify repo-local files (.gitignore, project configs, root scripts) must instead implement the change in plugin code (setup-sdlc helpers, hooks, SKILL.md) so it ships to every consumer. Direct edits to sdlc-marketplace files are allowed only when verifying the plugin's own dogfooding.",
+        "severity": "error"
+      },
+      {
+        "id": "flag-coherence-cross-skill",
+        "description": "When skill A dispatches skill B, B's prepare script resolves flags from CLI + config inputs; every SKILL.md decision site gating on that flag must cite the resolved field from prepare output (e.g., flags.X === true). Sites inspecting raw $ARGUMENTS, the original CLI string, or config.X directly after Step 1 (CONSUME) fail this guardrail. Exception: persistent project-state sites (e.g., CI scaffolding) must cite config.X AND include an inline rationale comment.",
+        "severity": "error"
+      },
+      {
+        "id": "no-opposite-logical-vectors",
+        "description": "Within a single skill, when two or more SKILL.md sites gate the same behavioral concept (e.g., 'draft changelog' at Step 2 and 'write changelog' at Step 8), the gate condition must be expressed identically (same field reference, same operator, same constant). Plans that introduce or retain divergent gate phrasings for the same concept fail this guardrail.",
+        "severity": "error"
+      },
+      {
+        "id": "flag-resolution-single-source",
+        "description": "Each contractual flag must have exactly one resolution site — typically the prepare script. Downstream consumers (SKILL.md, sub-skills, CI scripts) reference the resolved field by name; they must not re-derive the value via OR-ing, fallback logic, or argument re-parsing.",
+        "severity": "warning"
+      },
+      {
+        "id": "state-premise",
+        "description": "Plan must state the underlying problem in one sentence — in Goal, Architecture, or Key Decisions. Reject plans that transcribe requirements without naming the root problem.",
+        "severity": "error"
+      },
+      {
+        "id": "smallest-viable-cut",
+        "description": "Plan must identify the smallest version of the work that still delivers value. If the plan covers more than the minimum, each extra task must be justified in Key Decisions.",
+        "severity": "warning"
+      },
+      {
+        "id": "failure-audience",
+        "description": "Plan must name who or what fails if this implementation ships incorrectly (user, system, team, downstream service). Surfaces the blast radius before decomposition.",
+        "severity": "warning"
+      },
+      {
+        "id": "explicit-non-goals",
+        "description": "Plan must list what is intentionally NOT being built. Surface adjacent improvements that were considered and excluded so reviewers and executors do not silently re-expand scope.",
+        "severity": "warning"
+      },
+      {
+        "id": "ambiguity-stops-and-asks",
+        "description": "When two or more codebase patterns are viable for the same requirement with materially different downstream implications, the plan must EITHER record the choice in Key Decisions with rationale, OR the skill must AskUserQuestion before committing. Silent selection between viable patterns is a critique failure.",
+        "severity": "error"
+      },
+      {
+        "id": "state-machine-idempotency",
+        "description": "Tasks that modify migration, initialization, or preflight-check logic must include test cases verifying that the same check does not re-trigger after state has been successfully transitioned. Idempotency must be explicitly tested: run once, verify state change; run again, verify no re-triggering or state corruption.",
+        "severity": "error"
+      }
+    ]
+  },
+  "commit": {
+    "subjectPattern": "^(feat|fix|refactor|chore|docs|test|ci)\\(#\\d+\\): .+ - .+$",
+    "subjectPatternError": "Commit subject must follow: type(#issue): scope - description",
+    "allowedTypes": [
+      "feat",
+      "fix",
+      "refactor",
+      "chore",
+      "docs",
+      "test",
+      "ci"
+    ]
+  },
+  "pr": {
+    "titlePattern": "^(feat|fix|refactor|chore|docs|test|ci)\\(#\\d+\\): .+ - .+$",
+    "titlePatternError": "PR title must follow: type(#issue): scope - description",
+    "labels": {
+      "mode": "llm"
+    }
+  },
+  "execute": {
+    "guardrails": [
+      {
+        "id": "test-coverage-required",
+        "description": "Code changes must include corresponding test coverage — verify tests exist and pass after each wave.",
+        "severity": "error"
+      },
+      {
+        "id": "no-ci-bypass",
+        "description": "Implemented code must not disable, skip, or weaken CI checks, linters, or pre-commit hooks.",
+        "severity": "error"
+      },
+      {
+        "id": "no-scope-creep",
+        "description": "Implementation must stay within the task's stated scope — no additional features, refactoring, or cleanup beyond what was specified.",
+        "severity": "warning"
+      },
+      {
+        "id": "single-responsibility-tasks",
+        "description": "Each implemented change must address exactly one concern — no bundled fixes or unrelated modifications.",
+        "severity": "warning"
+      },
+      {
+        "id": "yagni",
+        "description": "Do not add functionality until it is actually needed. No speculative abstractions, premature generalization, or unused parameters.",
+        "severity": "warning"
+      },
+      {
+        "id": "dry",
+        "description": "Do not duplicate logic. If the same behavior exists elsewhere, reuse it or extract a shared function.",
+        "severity": "warning"
+      },
+      {
+        "id": "kiss",
+        "description": "Prefer the simplest implementation that satisfies the requirements. Avoid unnecessary abstractions and over-engineered solutions.",
+        "severity": "warning"
+      }
+    ]
+  },
+  "schemaVersion": 4,
+  "$schema": "./schemas/sdlc-config.schema.json"
+}

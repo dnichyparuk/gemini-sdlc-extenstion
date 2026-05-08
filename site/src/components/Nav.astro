@@ -1,0 +1,404 @@
+---
+const base = import.meta.env.BASE_URL;
+const repoUrl = 'https://github.com/rnagrodzki/sdlc-marketplace';
+const currentPath = Astro.url.pathname;
+
+interface NavItem {
+  label: string;
+  href: string;
+  children?: { label: string; href: string }[];
+}
+
+const navItems: NavItem[] = [
+  {
+    label: 'Skills',
+    href: `${base}/skills/`,
+    children: [
+      { label: 'View All', href: `${base}/skills/` },
+      { label: 'Planning', href: `${base}/skills/#planning` },
+      { label: 'Review', href: `${base}/skills/#review` },
+      { label: 'GitOps', href: `${base}/skills/#gitops` },
+      { label: 'Orchestration', href: `${base}/skills/#workflows` },
+      { label: 'DevOps', href: `${base}/skills/#devops` },
+      { label: 'Integrations', href: `${base}/skills/#integrations` },
+    ],
+  },
+  {
+    label: 'Workflows',
+    href: `${base}/workflows/`,
+  },
+  {
+    label: 'OpenSpec',
+    href: `${base}/openspec/`,
+    children: [
+      { label: 'View All', href: `${base}/openspec/` },
+      { label: 'Overview', href: `${base}/openspec/overview/` },
+      { label: 'SDLC Integration', href: `${base}/openspec/integration/` },
+      { label: 'Handover Workflow', href: `${base}/openspec/handover/` },
+    ],
+  },
+];
+
+function isActive(href: string): boolean {
+  const normalized = currentPath.replace(/\/$/, '');
+  const target = href.replace(/\/$/, '').split('?')[0];
+  return normalized === target || normalized.startsWith(target + '/');
+}
+---
+
+<nav class="site-nav" aria-label="Main navigation">
+  <div class="nav-inner">
+    <a href={`${base}/`} class="nav-wordmark">
+      SDLC<span class="nav-wordmark-sep">&thinsp;/&thinsp;</span>Marketplace
+    </a>
+
+    <button
+      class="nav-toggle"
+      aria-expanded="false"
+      aria-controls="nav-menu"
+      aria-label="Toggle navigation menu"
+      type="button"
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <line class="bar bar-1" x1="3" y1="5" x2="17" y2="5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line class="bar bar-2" x1="3" y1="10" x2="17" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <line class="bar bar-3" x1="3" y1="15" x2="17" y2="15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+      </svg>
+    </button>
+
+    <ul id="nav-menu" class="nav-links" role="menubar">
+      {navItems.map((item) => (
+        <li class:list={['nav-item', { 'has-dropdown': !!item.children }]} role="none">
+          <a
+            href={item.href}
+            class:list={['nav-link', { active: isActive(item.href) }]}
+            role="menuitem"
+            aria-haspopup={item.children ? 'true' : undefined}
+            aria-expanded={item.children ? 'false' : undefined}
+          >
+            {item.label}
+            {item.children && (
+              <svg class="dropdown-arrow" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                <path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            )}
+          </a>
+          {item.children && (
+            <ul class="dropdown" role="menu">
+              {item.children.map((child) => (
+                <li role="none">
+                  <a href={child.href} class="dropdown-link" role="menuitem">
+                    {child.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))}
+    </ul>
+
+    <a href={repoUrl} class="nav-github" target="_blank" rel="noopener noreferrer" aria-label="GitHub repository">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.604-3.369-1.341-3.369-1.341-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/>
+      </svg>
+    </a>
+  </div>
+</nav>
+
+<script>
+  function closeAllDropdowns() {
+    document.querySelectorAll('.has-dropdown.open').forEach((el) => {
+      el.classList.remove('open');
+      el.querySelector('.nav-link')?.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  // Mobile hamburger toggle
+  const toggle = document.querySelector('.nav-toggle') as HTMLButtonElement | null;
+  const menu = document.getElementById('nav-menu');
+
+  if (toggle && menu) {
+    toggle.addEventListener('click', () => {
+      const expanded = toggle.getAttribute('aria-expanded') === 'true';
+      toggle.setAttribute('aria-expanded', String(!expanded));
+      menu.classList.toggle('open');
+      if (expanded) closeAllDropdowns();
+    });
+  }
+
+  // Dropdown click toggle — prevents navigation and toggles open/closed
+  document.querySelectorAll('.has-dropdown > .nav-link').forEach((link) => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const parent = link.closest('.has-dropdown') as HTMLElement;
+      const wasOpen = parent.classList.contains('open');
+      closeAllDropdowns();
+      if (!wasOpen) {
+        parent.classList.add('open');
+        link.setAttribute('aria-expanded', 'true');
+      }
+    });
+  });
+
+  // Close on click outside
+  document.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('.has-dropdown')) {
+      closeAllDropdowns();
+    }
+  });
+
+  // Close on Escape, return focus to trigger
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const hadOpen = document.querySelector('.has-dropdown.open');
+      closeAllDropdowns();
+      if (hadOpen) (hadOpen.querySelector('.nav-link') as HTMLElement)?.focus();
+    }
+  });
+
+  // Close dropdown when a child item is clicked (future-proofs for client-side nav)
+  document.querySelectorAll('.dropdown-link').forEach((link) => {
+    link.addEventListener('click', () => closeAllDropdowns());
+  });
+</script>
+
+<style>
+  .site-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    height: 3.5rem;
+    background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    max-width: 72rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    height: 100%;
+  }
+
+  .nav-wordmark {
+    font-family: 'SF Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', 'Courier New', monospace;
+    font-size: 0.875rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--color-text);
+    text-decoration: none;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .nav-wordmark:hover {
+    color: var(--color-planning);
+  }
+
+  .nav-wordmark-sep {
+    color: var(--color-text-muted);
+    font-weight: 400;
+  }
+
+  .nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+  }
+
+  .nav-toggle:hover,
+  .nav-toggle:focus-visible {
+    color: var(--color-text);
+  }
+
+  .nav-toggle:focus-visible {
+    outline: 2px solid var(--color-planning);
+    outline-offset: 2px;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    list-style: none;
+    margin: 0 0 0 auto;
+    padding: 0;
+  }
+
+  .nav-item {
+    position: relative;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 0.875rem;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.12s ease;
+  }
+
+  .nav-link:hover {
+    color: var(--color-text);
+  }
+
+  .nav-link:focus-visible {
+    outline: 2px solid var(--color-planning);
+    outline-offset: -2px;
+    border-radius: 4px;
+  }
+
+  .nav-link.active {
+    color: var(--color-text);
+    box-shadow: inset 0 -2px 0 0 var(--color-planning);
+  }
+
+  .dropdown-arrow {
+    transition: transform 0.15s ease;
+  }
+
+  /* Dropdown */
+  .dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 10rem;
+    padding: 0.375rem 0;
+    margin: 0;
+    list-style: none;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Bridge the gap between nav link and dropdown panel so hover doesn't drop */
+  .dropdown::before {
+    content: '';
+    display: block;
+    height: 0.25rem;
+  }
+
+  .has-dropdown:hover .dropdown,
+  .has-dropdown:focus-within .dropdown,
+  .has-dropdown.open .dropdown {
+    display: block;
+  }
+
+  .has-dropdown:hover .dropdown-arrow,
+  .has-dropdown:focus-within .dropdown-arrow,
+  .has-dropdown.open .dropdown-arrow {
+    transform: rotate(180deg);
+  }
+
+  /* Visual separator under "View All" */
+  .dropdown li:first-child {
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 0.25rem;
+    padding-bottom: 0.125rem;
+  }
+
+  .dropdown-link {
+    display: block;
+    padding: 0.375rem 0.875rem;
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.1s ease, background 0.1s ease;
+  }
+
+  .dropdown-link:hover {
+    color: var(--color-text);
+    background: var(--color-surface-2);
+  }
+
+  .dropdown-link:focus-visible {
+    outline: 2px solid var(--color-planning);
+    outline-offset: -2px;
+  }
+
+  .nav-github {
+    display: flex;
+    align-items: center;
+    padding: 0.375rem;
+    margin-left: 0.5rem;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    transition: color 0.12s ease;
+    flex-shrink: 0;
+  }
+
+  .nav-github:hover {
+    color: var(--color-text);
+  }
+
+  .nav-github:focus-visible {
+    outline: 2px solid var(--color-planning);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Mobile */
+  @media (max-width: 640px) {
+    .nav-toggle {
+      display: block;
+    }
+
+    .nav-links {
+      display: none;
+      position: absolute;
+      top: 3.5rem;
+      left: 0;
+      right: 0;
+      flex-direction: column;
+      align-items: stretch;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      padding: 0.5rem 0;
+    }
+
+    .nav-links.open {
+      display: flex;
+    }
+
+    .nav-link {
+      padding: 0.625rem 1.5rem;
+    }
+
+    .nav-link.active {
+      box-shadow: inset 3px 0 0 0 var(--color-planning);
+    }
+
+    .dropdown {
+      position: static;
+      border: none;
+      background: none;
+      box-shadow: none;
+      padding: 0;
+      margin: 0;
+      border-radius: 0;
+    }
+
+    .has-dropdown:hover .dropdown,
+    .has-dropdown:focus-within .dropdown {
+      display: block;
+    }
+
+    .dropdown-link {
+      padding-left: 2.5rem;
+    }
+  }
+</style>

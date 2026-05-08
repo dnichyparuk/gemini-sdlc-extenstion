@@ -1,0 +1,78 @@
+# Fixture appropriateness:
+#   project-no-pr-template    -- CORRECT: primary use case; scans signals and creates from scratch
+#   project-with-pr-template  -- CORRECT: validates editing existing template
+#   project-with-dimensions   -- INVALID: review context, not PR template context
+
+- description: "setup-sdlc --pr-template: proposes new template from scanned project signals"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-no-pr-template.md"
+    user_request: "Run /setup-sdlc --pr-template to create a PR template for this project."
+  assert:
+    # Must propose section headings
+    - type: regex
+      value: "(## Summary|## Testing|## What Changed)"
+    # Must reference signals it scanned
+    - type: regex
+      value: "(GitHub PR template|recent PR|JIRA|PROJ)"
+    # Behavioral: signal-driven adaptation, interactive presentation
+    - type: llm-rubric
+      value: >
+        The response scans the project signals: the GitHub PR template (has "What Changed" and
+        "Testing Steps" sections), recent PRs (consistently use "## Summary" and "## Testing"),
+        and JIRA evidence (branch names with PROJ- prefix). Based on these signals, it proposes
+        a PR template that merges GitHub template sections with the recent PR patterns. It starts
+        from the default 8-section template and adapts by merging "What Changed" from GitHub
+        template, keeping consistent sections from recent PRs, and deciding whether to include
+        a JIRA section based on the PROJ- evidence. Each proposed section has a fill instruction
+        of at least 20 characters. It presents the proposal and asks the user to accept, edit,
+        or customize specific sections.
+
+- description: "setup-sdlc --pr-template: edits existing template preserving custom sections"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-pr-template.md"
+    user_request: "Run /setup-sdlc --pr-template to update the existing PR template."
+  assert:
+    # Must reference the existing custom sections
+    - type: regex
+      value: "(Deployment|Rollback)"
+    # Must recognize an existing template is in place
+    - type: regex
+      value: "(existing|current|already|found)"
+    # Behavioral: starts from existing template, proposes adaptations
+    - type: llm-rubric
+      value: >
+        The response detects the existing .claude/pr-template.md with 5 sections (Summary,
+        Technical Design, Testing, Deployment, Rollback). It starts from this existing template
+        rather than the default 8-section template. It scans the GitHub PR template
+        ("What Changed", "Testing Steps") and considers merging sections. Since the existing
+        template already has tailored Deployment and Rollback sections consistent with recent
+        PR patterns, it proposes minimal changes. It presents the current state and proposed
+        adaptations (if any) and asks the user for feedback.
+
+- description: "setup-sdlc --pr-template: shows workflow continuation menu after template customization"
+  vars:
+    skill_path: "plugins/sdlc-utilities/skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-template-customized.md"
+    user_request: >
+      Run /setup-sdlc --pr-template. The PR template has been customized and saved to
+      .claude/pr-template.md — all V1-V5 validation checks passed. The workflow is
+      complete. Now show what comes next.
+  assert:
+    # Must offer PR creation as a next action
+    - type: icontains
+      value: "/pr-sdlc"
+    # Must offer commit as a next action
+    - type: icontains
+      value: "/commit-sdlc"
+    # Must offer done as an option
+    - type: icontains
+      value: "done"
+    # Behavioral: interactive menu with skill options
+    - type: llm-rubric
+      value: >
+        The response presents an interactive menu asking the user what to do next after
+        PR template customization, with specific skill options to choose from. The menu
+        includes at minimum: pr (/pr-sdlc), commit (/commit-sdlc), and done. The user
+        is asked to select an option rather than being given a passive suggestion.
