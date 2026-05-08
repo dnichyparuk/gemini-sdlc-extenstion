@@ -1,0 +1,77 @@
+# Script execution tests for lib/openspec.js new helpers (issue #162).
+# Tests validateChangeStrict, isArchived, and runArchive exports.
+# These run real Node.js scripts against fixture directories (no LLM).
+# Uses openspec-lib-test.js helper so script_path resolves to a real file
+# (script_path: "inline" is not supported by script-runner.js).
+
+- description: "openspec-lib: isArchived returns true for archived change"
+  vars:
+    script_path: "repo://tests/promptfoo/scripts/openspec-lib-test.js"
+    script_args: "--op isArchived --project-root {{project_root}} --change add-auth"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-openspec-archived-change"
+  assert:
+    - type: icontains
+      value: '"isArchived": true'
+
+- description: "openspec-lib: isArchived returns false for active (non-archived) change"
+  vars:
+    script_path: "repo://tests/promptfoo/scripts/openspec-lib-test.js"
+    script_args: "--op isArchived --project-root {{project_root}} --change add-auth"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-openspec-ready-to-archive"
+  assert:
+    - type: icontains
+      value: '"isArchived": false'
+
+- description: "openspec-lib: isArchived returns false when archive dir does not exist"
+  vars:
+    script_path: "repo://tests/promptfoo/scripts/openspec-lib-test.js"
+    script_args: "--op isArchived --project-root {{project_root}} --change nonexistent"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-openspec-baseline"
+  assert:
+    - type: icontains
+      value: '"isArchived": false'
+
+- description: "openspec-lib: validateChangeStrict returns cliAvailable false when openspec not on PATH"
+  vars:
+    script_path: "repo://tests/promptfoo/scripts/openspec-lib-test.js"
+    script_args: "--op validateChangeStrict --project-root {{project_root}} --change add-auth --no-path"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-openspec-ready-to-archive"
+  assert:
+    - type: icontains
+      value: '"cliAvailable": false'
+    - type: icontains
+      value: '"ok": false'
+
+- description: "openspec-lib: runArchive returns cliAvailable false when openspec not on PATH"
+  vars:
+    script_path: "repo://tests/promptfoo/scripts/openspec-lib-test.js"
+    script_args: "--op runArchive --project-root {{project_root}} --change add-auth --no-path"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-openspec-ready-to-archive"
+  assert:
+    - type: icontains
+      value: '"cliAvailable": false'
+    - type: icontains
+      value: '"ok": false'
+
+- description: "openspec-lib: all three new helpers are exported"
+  vars:
+    script_path: "repo://tests/promptfoo/scripts/openspec-lib-test.js"
+    script_args: "--op exports"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-openspec-baseline"
+  assert:
+    - type: icontains
+      value: '"hasValidateChangeStrict": true'
+    - type: icontains
+      value: '"hasIsArchived": true'
+    - type: icontains
+      value: '"hasRunArchive": true'
+    - type: icontains
+      value: '"hasDetectActiveChanges": true'
+    - type: icontains
+      value: '"hasValidateChange": true'

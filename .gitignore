@@ -1,0 +1,13 @@
+.worktrees/
+tests/promptfoo/.promptfoo-data/
+.evidences/
+
+site/node_modules/
+site/dist/
+site/.astro/
+
+# >>> sdlc-utilities managed v3 (do not edit) — transient skill artifacts
+*-context-*.json
+*-manifest-*.json
+*-prepare-*.json
+# <<< sdlc-utilities managed

@@ -1,0 +1,447 @@
+# Fixture appropriateness:
+#   feature-branch-with-commits    -- CORRECT: primary scenario; no JIRA, multiple commits, needs push
+#   feature-branch-jira            -- CORRECT: validates JIRA detection from branch name
+#   feature-branch-on-main         -- CORRECT: validates main branch rejection guard
+#   feature-branch-custom-template -- CORRECT: validates custom template replaces default 8 sections
+#   project-with-dimensions        -- INVALID: not a PR context
+#   project-no-dimensions          -- INVALID: not a PR context
+
+- description: "pr-sdlc: standard PR creation with all 8 sections"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-with-commits.md"
+    user_request: >
+      Run /pr-sdlc for this feature branch. The pr-prepare.js output is provided in the project
+      context above. Generate the PR title and all required sections of the description.
+  assert:
+    # Must produce section headings (at least Summary)
+    - type: icontains
+      value: "## Summary"
+    # JIRA section must show "Not detected" since no ticket in fixture
+    - type: icontains
+      value: "Not detected"
+    # Changes Overview must NOT contain file paths (quality gate)
+    - type: not-regex
+      value: "src/routes/search\\.ts"
+    # Must produce a title (conventional commit style)
+    - type: regex
+      value: '(feat|fix|chore|refactor|docs)(\(.+\))?:'
+    # Behavioral: all 8 sections present with appropriate content
+    - type: llm-rubric
+      value: >
+        The response produces a complete PR description with multiple sections including at minimum
+        Summary, JIRA Ticket, Changes Overview, and Testing. The PR title is under 72 characters
+        and follows conventional commit format (feat/fix/chore prefix). The JIRA Ticket section
+        shows "Not detected" or equivalent since no JIRA reference appears in the commits or branch
+        name. The Changes Overview section describes functional areas changed (not individual file
+        paths). Business sections (Business Context, Business Benefits) are either filled with
+        evidence-based content or marked N/A with reasoning — they are not left blank.
+
+- description: "pr-sdlc: JIRA ticket auto-detected from branch name"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-jira.md"
+    user_request: >
+      Run /pr-sdlc for this branch. The pr-prepare.js output is in the project context.
+      Generate the full PR title and description.
+  assert:
+    # Must detect and show PROJ-456
+    - type: icontains
+      value: "PROJ-456"
+    # Must NOT say "Not detected" for JIRA since it was found
+    - type: not-icontains
+      value: "Not detected"
+    # Behavioral: JIRA detected from branch name, no fabrication
+    - type: llm-rubric
+      value: >
+        The response detects PROJ-456 from the branch name "PROJ-456/fix-auth-timeout" and
+        populates the JIRA Ticket section with this reference. The response does NOT fabricate
+        a different ticket number or say "Not detected". The PR title and description focus on
+        the authentication timeout fix described in the commits.
+
+- description: "pr-sdlc: custom template replaces default 8 sections"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-custom-template.md"
+    user_request: >
+      Run /pr-sdlc for this feature branch. The pr-prepare.js output is provided in the project
+      context above. Generate the PR title and all required sections of the description.
+  assert:
+    # Must produce all 3 custom template sections
+    - type: icontains
+      value: "## Summary"
+    - type: icontains
+      value: "## What Changed"
+    - type: icontains
+      value: "## Testing"
+    # Must NOT produce default-only sections (proves custom template replaced the default)
+    - type: not-icontains
+      value: "## Business Context"
+    - type: not-icontains
+      value: "## Business Benefits"
+    - type: not-icontains
+      value: "## Technical Impact"
+    - type: not-icontains
+      value: "## Changes Overview"
+    # Universal gate: title still follows conventional commit format
+    - type: regex
+      value: '(feat|fix|chore|refactor|docs)(\(.+\))?:'
+    # Universal gate: no fabricated JIRA ticket (custom template has no JIRA section)
+    - type: not-regex
+      value: '[A-Z]{2,10}-\d+'
+    # Behavioral: custom template used, content from commits/diff, no fabrication
+    - type: llm-rubric
+      value: >
+        The response uses the custom template with exactly 3 sections (Summary, What Changed,
+        Testing) instead of the default 8-section structure. It does NOT include Business Context,
+        Business Benefits, Technical Design, Technical Impact, or Changes Overview sections.
+        The PR title is under 72 characters and follows conventional commit format. The Summary
+        is 1-3 plain-language sentences describing the search API addition. The What Changed
+        section describes the technical changes (search endpoint, model, validation, tests)
+        based on the commit subjects and diff data. The Testing section describes how the
+        changes were verified (references the integration and unit tests visible in the diff).
+        No content is fabricated — all claims trace back to the commits and diff provided.
+
+- description: "pr-sdlc: main branch rejected with clear error"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-on-main.md"
+    user_request: "Run /pr-sdlc to create a pull request."
+  assert:
+    # Must mention the reason for rejection (main/master/protected/error)
+    - type: regex
+      value: "(main|master|protected|cannot|error|refuse|switch|feature branch)"
+    # Must NOT produce a PR description (## Changes Overview only appears in actual PR descriptions)
+    - type: not-icontains
+      value: "## Changes Overview"
+    # Must NOT produce a PR title in conventional commit format (no feat/fix/chore:)
+    - type: not-regex
+      value: '^feat(\(.+\))?:'
+    # Behavioral: clearly refuses and instructs to switch branches
+    - type: llm-rubric
+      value: >
+        The response reads the error from pr-prepare.js output and clearly refuses to create a PR
+        because the current branch is "main" (a protected branch). It instructs the user to switch
+        to a feature branch first. It does NOT generate any PR title or description sections.
+        The refusal message is clear and actionable.
+
+- description: "pr-sdlc: --auto flag skips interactive approval prompt"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-with-commits.md"
+    user_request: >
+      Run /pr-sdlc --auto. The pr-prepare.js output is provided in the project context above
+      with isAuto set to true. Generate the PR and create it without prompting for confirmation.
+  assert:
+    # Must NOT ask for approval (auto mode skips the prompt)
+    - type: not-icontains
+      value: "Create this PR as shown?"
+    # Must still produce all sections (quality is not degraded)
+    - type: icontains
+      value: "## Summary"
+    # Must still produce a conventional commit title
+    - type: regex
+      value: '(feat|fix|chore|refactor|docs)(\(.+\))?:'
+    # Behavioral: creates PR without interactive approval
+    - type: llm-rubric
+      value: >
+        The response generates a complete PR description with all 8 sections and proceeds to
+        create the PR without asking for user confirmation. It does NOT present a "Create this
+        PR as shown?" prompt or offer yes/edit/cancel options. The PR title, labels (if any),
+        and description are still displayed for visibility. Critique gates are applied internally
+        — the description quality is not degraded by auto mode.
+
+- description: "pr-sdlc: enforces title type constraint from config"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-config-present.md"
+    user_request: >
+      Run /pr-sdlc. The pr-prepare.js output includes prConfig with
+      allowedTypes: [feat, fix, chore, refactor, docs]. Generate a PR title with
+      type constraint enforced during planning. The commits are about caching.
+  assert:
+    # Must generate a type from allowedTypes
+    - type: regex
+      value: '^(feat|fix|chore|refactor|docs)(\([a-z-]+\))?:'
+    # Must NOT generate an invalid type (e.g., "perf" or "style" which aren't in allowedTypes)
+    - type: not-regex
+      value: '^(perf|style|test|ci)(\([a-z-]+\))?:'
+    # Behavioral: type constraint respected in critique/planning
+    - type: llm-rubric
+      value: >
+        The PR title uses only types from the allowedTypes constraint (feat, fix, chore,
+        refactor, docs). The skill's quality gate validates the type against the config,
+        ensuring no invalid types (perf, style, test, ci, etc.) are used. The planning output
+        reflects the type constraint being applied.
+
+- description: "pr-sdlc: validates title against pattern from config"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-config-present.md"
+    user_request: >
+      Run /pr-sdlc. The project config contains titlePattern:
+      "^(feat|fix|chore|refactor|docs)(\\([a-z-]+\\))?:". Generate a PR title
+      whose text matches this pattern. The quality gate must validate the match.
+  assert:
+    # Must produce title matching the pattern (type:scope format)
+    - type: regex
+      value: '^(feat|fix|chore|refactor|docs)(\([a-z-]+\))?:'
+    # Must include scope from allowedScopes: api, auth, db
+    - type: regex
+      value: '\((api|auth|db)\):'
+    # Behavioral: pattern validation in quality gate
+    - type: llm-rubric
+      value: >
+        The PR title matches the configured pattern with a valid type and scope.
+        The scope is drawn from allowedScopes (api, auth, db). The quality gate
+        validates the title against the titlePattern regex, confirming pattern match.
+        The response mentions pattern validation or matching in the critique output.
+
+- description: "pr-sdlc: post-failure gh-account-switch retry on CreatePullRequest permission error (issue #184)"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-permission-denied.md"
+    user_request: >
+      Run /pr-sdlc. The first `gh pr create` call has just failed with stderr containing
+      `does not have the correct permissions to execute \`CreatePullRequest\``.
+      The project context describes the helper script available and the expected recovery
+      JSON it returns. Describe the exact Step 6 flow your skill follows on this failure,
+      including (a) how stderr is captured, (b) how `pr-recover-gh-account.js` is invoked,
+      (c) what user-visible message is printed on a successful switch, (d) how many times
+      `gh pr create` is retried, and (e) what happens on the no-match branch.
+  assert:
+    - type: icontains
+      value: "pr-recover-gh-account"
+    - type: icontains
+      value: "--error-file"
+    - type: regex
+      value: "(retry|retried|re-run|rerun).{0,40}(once|exactly one|single)"
+    - type: llm-rubric
+      value: >
+        The response describes the post-failure recovery flow accurately. It captures the
+        failing `gh pr create` stderr to a temp file (mktemp). It invokes
+        `pr-recover-gh-account.js --error-file <tmp>` exactly once, using the standard
+        installed-first-then-local script lookup pattern (find under ~/.claude/plugins,
+        fallback to scripts/skill/). It parses the returned JSON.
+        On `recovered:true && switched:true`, it prints a single concise user-visible
+        recovery line (something like "Switched gh account to Cleeng due to repo-permission
+        mismatch — retrying"), not the raw GraphQL error. It re-runs `gh pr create` exactly
+        once — never in a loop. On the no-match branch (`recovered:false` with a `hint`
+        field), it surfaces the original error plus the `gh auth login --hostname <host>`
+        hint and proceeds to the existing failure fallback (no retry). It does not call
+        the helper twice or invoke any matching/decision logic itself — all decisions
+        come from the helper.
+
+# ---------------------------------------------------------------------------
+# Issue #197 — Configurable PR labels (mode: off | rules | llm)
+# ---------------------------------------------------------------------------
+
+- description: "pr-sdlc labels: mode=off + no forced labels → no Labels line, no fabrication"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-with-commits.md"
+    user_request: >
+      Run /pr-sdlc on this feature branch. Assume PR_CONTEXT_JSON.prConfig.labels.mode = "off"
+      and forcedLabels is empty. Show the Step 5 approval prompt verbatim — what is the
+      Labels line, if any? Justify your answer against the Step 2b dispatch rules.
+  assert:
+    # The Labels line must NOT appear in the approval prompt
+    - type: not-icontains
+      value: "Labels:"
+    # No fabricated labels regardless of repoLabels content
+    - type: not-icontains
+      value: "(rule)"
+    - type: not-icontains
+      value: "(llm)"
+    - type: llm-rubric
+      value: >
+        The response correctly states that under mode = "off" with no forced labels, no
+        Labels line is shown in the Step 5 approval output. It cites the Step 2b "Off mode"
+        rule and the Step 5 instruction to omit the Labels line entirely when there are no
+        labels. It does NOT fabricate any label suggestions, does NOT fall back to fuzzy
+        matching, and does NOT mention "(llm)" or "(rule)" provenance tags.
+
+- description: "pr-sdlc labels: mode=rules + matching branchPrefix → only the matched label is suggested"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-sdlc-labels-rules.md"
+    user_request: >
+      Run /pr-sdlc Step 2b on this branch. Walk through every rule in prConfig.labels.rules
+      against the PR context and report the final suggestedLabels list with provenance tags.
+      Use the dispatch rules from the SKILL.md exactly.
+  assert:
+    # branchPrefix rule matches "fix/" → bug
+    - type: icontains
+      value: "bug"
+    # diffSizeUnder rule matches (44 < 50) → small-change
+    - type: icontains
+      value: "small-change"
+    # commitType "feat" rule does NOT match (commits start with "fix")
+    - type: not-icontains
+      value: "feature (rule)"
+    # pathGlob "**/*.md" rule does NOT match (only .ts files)
+    - type: not-icontains
+      value: "documentation (rule)"
+    - type: llm-rubric
+      value: >
+        The response correctly evaluates each rule. It identifies that the branchPrefix
+        rule matches because the branch starts with "fix/", producing the "bug" label tagged
+        (rule). It identifies that the diffSizeUnder=50 rule matches because totalLinesChanged
+        is 44, producing "small-change" tagged (rule). It correctly REJECTS the commitType
+        "feat" rule (commits start with "fix(...)" not "feat(...)") and the pathGlob "**/*.md"
+        rule (the changed files are .ts, not all-markdown). The final suggestedLabels list
+        contains exactly two entries: bug (rule) and small-change (rule). No fabrication.
+
+- description: "pr-sdlc labels: mode=rules + forced label appears first, deduped against rule match"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-sdlc-labels-rules.md"
+    user_request: >
+      Run /pr-sdlc Step 2b but assume forcedLabels = ["bug", "needs-review"]. Show the
+      final ordered, deduped suggestedLabels list with provenance tags as it would appear
+      in the Step 5 Labels line.
+  assert:
+    - type: icontains
+      value: "bug (forced)"
+    - type: icontains
+      value: "needs-review (forced)"
+    # bug must NOT also appear with (rule) — forced wins
+    - type: not-icontains
+      value: "bug (rule)"
+    # small-change still emerges from the diffSizeUnder rule
+    - type: icontains
+      value: "small-change (rule)"
+    - type: llm-rubric
+      value: >
+        The response shows forced labels first ("bug (forced)", "needs-review (forced)"),
+        followed by the rule-derived "small-change (rule)". The "bug" label appears exactly
+        once with (forced) provenance — the rule match is deduplicated since forced wins
+        for provenance. needs-review appears even though it was not in any rule, because
+        forced labels apply regardless of mode.
+
+- description: "pr-sdlc labels: mode=rules + rule references missing label → warning + rule stripped"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/pr-sdlc-labels-rules.md"
+    user_request: >
+      Run /pr-sdlc Step 2b but assume prConfig.labels.rules contains an additional rule
+      `{ label: "wontfix", when: { branchPrefix: ["fix/"] } }` and that "wontfix" is NOT
+      in repoLabels. Describe (a) where this rule is filtered, (b) what warning surfaces,
+      and (c) the final suggestedLabels list.
+  assert:
+    - type: icontains
+      value: "wontfix"
+    # Warning text from pr.js
+    - type: regex
+      value: "(does not exist|will be ignored|not in the repo|not in repoLabels)"
+    - type: not-icontains
+      value: "wontfix (rule)"
+    - type: llm-rubric
+      value: >
+        The response correctly explains that pr.js validates rules[].label against repoLabels
+        and strips any rule whose label is not present, emitting a warning ("Label \"wontfix\"
+        referenced in pr.labels.rules does not exist in the repo. Rule will be ignored." or
+        equivalent wording). The skill's Step 2b dispatch never sees the bad rule. The final
+        suggestedLabels list does NOT include "wontfix" with any provenance tag.
+
+- description: "pr-sdlc labels: mode=llm → fuzzy heuristic produces (llm)-tagged suggestions"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-with-commits.md"
+    user_request: >
+      Run /pr-sdlc Step 2b on this branch with PR_CONTEXT_JSON.prConfig.labels.mode = "llm"
+      and repoLabels = [{name:"feature"},{name:"enhancement"},{name:"tests"}]. Apply the
+      LLM-mode fuzzy heuristic from Step 2b and report the final suggestedLabels with
+      provenance tags as the Step 5 Labels line would render them.
+  assert:
+    - type: icontains
+      value: "(llm)"
+    # Branch starts with feat/ and commits are feat(...): fuzzy match → feature or enhancement
+    - type: regex
+      value: "(feature|enhancement)"
+    - type: llm-rubric
+      value: >
+        The response activates the LLM-mode fuzzy heuristic and produces label suggestions
+        from the branch prefix ("feat/") and conventional-commit subjects ("feat(...)",
+        "chore(...)") matched against the provided repoLabels. Each suggested label carries
+        the (llm) provenance tag in the Step 5 display. The response makes clear this
+        branch ran ONLY because mode = "llm" was explicitly selected (opt-in), and would
+        not have run under the default "off" mode.
+
+- description: "pr-sdlc labels: pr.labels absent (legacy project) → behaves as mode=off"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: "file://fixtures/feature-branch-with-commits.md"
+    user_request: >
+      Run /pr-sdlc Step 2b assuming PR_CONTEXT_JSON.prConfig is `{ "titlePattern": "..." }`
+      with NO `labels` block at all (legacy project that never ran setup-sdlc --only pr-labels).
+      What does Step 2b dispatch to, and what is the Labels line in Step 5?
+  assert:
+    - type: not-icontains
+      value: "Labels:"
+    - type: not-icontains
+      value: "(llm)"
+    - type: not-icontains
+      value: "(rule)"
+    - type: llm-rubric
+      value: >
+        The response identifies that when prConfig.labels is absent, the Step 2b mode
+        defaults to "off" (per the resolution rule "When absent, default to off"). No
+        evaluation runs, no Labels line appears in Step 5, and the LLM fuzzy heuristic is
+        NOT triggered. This is the explicit fix for issue #197 — legacy projects do not
+        get fabricated labels until they opt into rules or llm mode.
+
+- description: "pr-sdlc: synced branch reports pushed=true, action=none (issue #214 regression)"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: >
+      The branch `feat/auth-jwt` has an upstream `origin/feat/auth-jwt` that is fully
+      synced — `git status -sb` reports neither "ahead" nor "behind". The branch was
+      pushed by a previous /pr-sdlc run; this run does not push anything new.
+      pr.js produced this remoteState section in the context JSON:
+        { "remoteState": { "pushed": true, "remoteBranch": "origin/feat/auth-jwt", "action": "none" } }
+    user_request: >
+      Run /pr-sdlc on this branch. The remoteState shows `pushed: true, action: none`
+      because the branch is in sync with origin. Walk through how pr.js arrives at
+      this state and explain the new semantics (issue #214). Why is `pushed: true`
+      correct here even though this run did NOT perform a push?
+  assert:
+    - type: icontains
+      value: "pushed"
+    - type: icontains
+      value: "sync"
+    - type: llm-rubric
+      value: >
+        The response explains the redefined `pushed` field (issue #214): it now
+        reports whether the branch is in sync with origin, NOT whether the current
+        run performed a push. The synced case (`hasUpstream && !isAhead && !isBehind`)
+        produces `pushed: true, action: 'none'` because the branch is up to date —
+        the prior bug was that this state reported `pushed: false` and triggered
+        spurious "needs push" warnings. The response distinguishes the two fields:
+        `pushed` is sync state, `action` is the audit log of what this run did
+        (`none` | `pushed` | `pushed-new` | `error`). The response also notes that
+        `getRemoteState` now performs a best-effort `git fetch` so the local view
+        of upstream is fresh before the comparison.
+
+- description: "pr-sdlc: ahead branch after push reports pushed=true, action=pushed"
+  vars:
+    skill_path: "skills/pr-sdlc/SKILL.md"
+    project_context: >
+      The branch `feat/login` has an upstream `origin/feat/login` and was 2 commits
+      ahead before pr-sdlc ran. pr-sdlc invoked pushToRemote which succeeded. The
+      resulting remoteState in the context JSON:
+        { "remoteState": { "pushed": true, "remoteBranch": "origin/feat/login", "action": "pushed" } }
+    user_request: >
+      Walk through why pushed is true in this case even though the cached
+      remoteInfo.isAhead snapshot was true at the moment remoteState was constructed.
+  assert:
+    - type: icontains
+      value: "pushed"
+    - type: llm-rubric
+      value: >
+        The response explains that after a successful `pushToRemote` call, the branch
+        is in sync with origin — even though `remoteInfo.isAhead` was captured BEFORE
+        the push and still reports true. The implementation uses
+        `justPushed = remoteAction === 'pushed' || 'pushed-new'` as a short-circuit
+        so a successful push always yields `pushed: true`, regardless of the stale
+        cached `isAhead` snapshot. `action` is `pushed` (audit log: this run pushed).

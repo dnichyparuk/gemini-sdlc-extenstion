@@ -1,0 +1,227 @@
+# Fixture appropriateness:
+#   project-with-tech-stack    -- CORRECT: React/TypeScript frontend; multiple signals for dimension proposals
+#   project-no-dimensions      -- CORRECT: Python/FastAPI project; different signals → different proposals
+#   project-with-cicd-monorepo -- CORRECT: TypeScript monorepo + CI/CD; tests extended dimension catalog
+#   healthy-plugin-structure   -- INVALID: plugin manifest context, not a project to scan
+
+- description: "setup-sdlc --dimensions: scans tech stack and proposes tailored dimensions"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-tech-stack.md"
+    user_request: "Run /setup-sdlc --dimensions to scan this project and propose review dimensions."
+  assert:
+    # Must always include the baseline code-quality dimension
+    - type: icontains
+      value: "code-quality-review"
+    # Must propose at least one evidence-based additional dimension
+    - type: regex
+      value: "(test-coverage|ui-review|documentation)"
+    # Must cite specific evidence from the project
+    - type: regex
+      value: "(React|TypeScript|testing-library|components|__tests__)"
+    # Behavioral: evidence-based proposals with accurate citations
+    - type: llm-rubric
+      value: >
+        The response scans the React/TypeScript project signals and proposes dimensions with
+        specific evidence from the fixture: code-quality-review (always included as baseline),
+        test-coverage (evidence: testing-library + jest devDependencies, 63 test files in
+        __tests__/), ui-review (evidence: 47 components, 12 pages, React), and optionally
+        documentation (evidence: docs/ directory with 8 markdown files). Each proposed dimension
+        cites the specific evidence that triggered it. The response does NOT propose security,
+        api, data-integrity, or infrastructure dimensions since there is no evidence for these
+        in the fixture. Trigger patterns reference the actual project directories (src/components/,
+        src/pages/, __tests__/).
+
+- description: "setup-sdlc --dimensions: monorepo with CI/CD gets extended dimension proposals"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-cicd-monorepo.md"
+    user_request: "Run /setup-sdlc --dimensions to scan this project and propose review dimensions."
+  assert:
+    # Must always include baseline
+    - type: icontains
+      value: "code-quality-review"
+    # Must propose monorepo governance dimension
+    - type: icontains
+      value: "monorepo-governance-review"
+    # Must propose CI/CD pipeline dimension
+    - type: icontains
+      value: "ci-cd-pipeline-review"
+    # Must cite monorepo-specific evidence
+    - type: regex
+      value: "(pnpm-workspace|packages/|workspace|lerna|turbo|monorepo)"
+    # Must cite CI/CD-specific evidence
+    - type: regex
+      value: '(\.github/workflows|\.circleci|ci\.yml|release\.yml)'
+    # Behavioral: detects monorepo + CI/CD signals, proposes correct extended dimensions
+    - type: llm-rubric
+      value: >
+        The response scans the TypeScript monorepo project and proposes dimensions appropriate
+        for a monorepo with CI/CD pipelines: code-quality-review (baseline, always included),
+        monorepo-governance-review (evidence: pnpm-workspace.yaml, packages/ and apps/ dirs,
+        workspaces config in package.json), and ci-cd-pipeline-review (evidence:
+        .github/workflows/ci.yml, .github/workflows/release.yml, .circleci/config.yml).
+        Each proposal cites specific evidence from the fixture. The response does NOT propose
+        security, api-review, or data-integrity dimensions since there is no auth/ORM/route
+        evidence in the fixture. It presents the proposals to the user before creating files.
+
+- description: "setup-sdlc --dimensions: Python/FastAPI project gets appropriate proposals"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-no-dimensions.md"
+    user_request: "Run /setup-sdlc --dimensions for this project."
+  assert:
+    # Must always include baseline
+    - type: icontains
+      value: "code-quality-review"
+    # Must detect Python/FastAPI signals
+    - type: regex
+      value: "(FastAPI|SQLAlchemy|Python|fastapi|sqlalchemy)"
+    # Must propose dimensions appropriate to a Python backend
+    - type: regex
+      value: "(api-review|data-integrity|security)"
+    # Behavioral: detects Python backend stack, proposes fitting dimensions
+    - type: llm-rubric
+      value: >
+        The response scans the Python/FastAPI project and proposes dimensions appropriate for a
+        backend API with a database ORM: code-quality-review (baseline), api-review (evidence:
+        FastAPI routes in src/routes/), data-integrity (evidence: SQLAlchemy in requirements.txt,
+        migrations/ directory), and optionally security (evidence: authentication-adjacent API).
+        Each proposal cites specific evidence from the fixture (requirements.txt dependencies,
+        directory names). The response does NOT propose ui-review since there is no frontend
+        evidence. It presents proposals to the user and asks which ones to install.
+
+- description: "setup-sdlc --dimensions: shows workflow continuation menu after dimension setup"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/review-dimensions-created.md"
+    user_request: >
+      Run /setup-sdlc --dimensions. The review dimensions have been created — 3 dimension
+      files written to .claude/review-dimensions/ and all validation checks passed.
+      The workflow is complete. Now show what comes next.
+  assert:
+    # Must offer review as a next action
+    - type: icontains
+      value: "/review-sdlc"
+    # Must offer commit as a next action
+    - type: icontains
+      value: "/commit-sdlc"
+    # Must offer done as an option
+    - type: icontains
+      value: "done"
+    # Behavioral: interactive menu with skill options
+    - type: llm-rubric
+      value: >
+        The response presents an interactive menu asking the user what to do next after
+        review dimension setup, with specific skill options to choose from. The menu
+        includes at minimum: review (/review-sdlc), commit (/commit-sdlc), and done.
+        The user is asked to select an option rather than being given a passive suggestion.
+
+- description: "setup-sdlc --dimensions: --add mode proposes only new dimensions, acknowledges existing"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-dimensions-add-mode.md"
+    user_request: >
+      Run /setup-sdlc --dimensions --add on this project. The project already has code-quality-review
+      and security-review dimensions installed. Propose additional dimensions based on the
+      project's tech stack.
+  assert:
+    - type: regex
+      value: "(existing|installed|already)"
+    - type: regex
+      value: "(code-quality-review|security-review)"
+    - type: not-regex
+      value: "(propose.*code-quality-review|propose.*security-review|create.*code-quality-review|create.*security-review|add.*code-quality-review.*dimension|add.*security-review.*dimension)"
+    - type: llm-rubric
+      value: >
+        The response acknowledges the 2 existing dimensions (code-quality-review and
+        security-review) that are already installed. It proposes only NEW dimensions
+        based on project evidence — likely test-coverage (evidence: __tests__ directory
+        with 25+ test files) and ci-cd-pipeline-review (evidence: .github/workflows/).
+        It does NOT re-propose the already-installed dimensions. Each new proposal
+        cites specific evidence from the project.
+
+- description: "setup-sdlc --dimensions: validation failure shows errors and offers to fix"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-invalid-dimension.md"
+    user_request: >
+      I ran /setup-sdlc --dimensions and the dimensions were created, but validation failed.
+      The validation output is in the project context. Help me fix the issues.
+  assert:
+    - type: regex
+      value: "(D4|trigger|empty)"
+    - type: regex
+      value: "(error|fail|issue|problem)"
+    - type: regex
+      value: "(fix|repair|correct|update)"
+    - type: llm-rubric
+      value: >
+        The response reads the validation output showing code-quality-review failed D4
+        (empty triggers). It clearly reports the error and offers to fix it automatically.
+        It may also mention the D11 warning on api-review (typo in field name). It does
+        NOT invoke error-report-sdlc (this is exit code 1, not exit code 2). The response
+        is actionable — it either fixes the dimension directly or asks for confirmation
+        before fixing.
+
+- description: "setup-sdlc --dimensions: minimal project still gets baseline dimension proposal"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-empty-signals.md"
+    user_request: >
+      Run /setup-sdlc --dimensions on this project. It's a very minimal project with just a
+      README and a single Python file.
+  assert:
+    - type: regex
+      value: "(code-quality|baseline|default)"
+    - type: regex
+      value: "(limited|minimal|few|little|no.+signal)"
+    - type: not-regex
+      value: "(security-review|api-review|data-integrity|test-coverage|monorepo|ci-cd)"
+    - type: llm-rubric
+      value: >
+        The response acknowledges the minimal project with very few tech signals.
+        It still proposes code-quality-review as the baseline dimension (it is always
+        proposed regardless of signals). It does NOT fabricate dimensions without
+        evidence — no security-review, api-review, data-integrity, test-coverage, or
+        ci-cd-pipeline-review since there is no evidence for any of these. It may
+        suggest the user add more project structure before re-running.
+
+- description: "setup-sdlc --dimensions: --no-copilot skips GitHub Copilot instructions step"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-tech-stack.md"
+    user_request: >
+      Run /setup-sdlc --dimensions --no-copilot on this project. Scan the tech stack and
+      propose dimensions, but skip the GitHub Copilot instructions generation step.
+  assert:
+    - type: not-regex
+      value: '(copilot instruction|\.github/instructions|instructions\.md)'
+    - type: regex
+      value: "(dimension|code-quality)"
+    - type: llm-rubric
+      value: >
+        The response scans the project tech stack and proposes dimensions normally
+        (code-quality-review baseline plus evidence-based proposals). It explicitly
+        skips or does not mention the GitHub Copilot instructions generation step
+        (Step 8 in the skill). It does NOT create .github/instructions/ files. The
+        dimension creation and validation proceed as normal despite --no-copilot.
+
+- description: "setup-sdlc --dimensions: does not exit plan mode or change permissions during file writes"
+  vars:
+    skill_path: "skills/setup-sdlc/SKILL.md"
+    project_context: "file://fixtures/project-with-tech-stack.md"
+    user_request: >
+      Run /setup-sdlc --dimensions on this project. Write the dimension files.
+      Show me the exact steps you would take to create the dimension files.
+  assert:
+    - type: not-icontains
+      value: "ExitPlanMode"
+    - type: not-regex
+      value: "(exit.*plan.*mode|change.*permission|switch.*mode)"
+    - type: llm-rubric
+      value: >
+        The response creates dimension files without calling ExitPlanMode, changing
+        permission settings, or exiting any mode. The dimension creation workflow
+        inherits the parent skill's permission mode and does not attempt to manage
+        permissions independently. File writes are batched or done in rapid sequence.

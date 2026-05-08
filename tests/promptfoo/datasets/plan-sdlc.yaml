@@ -1,0 +1,227 @@
+# Fixture appropriateness:
+#   plan-written                   -- CORRECT: simulates a written plan file, triggers Step 7 handoff
+#   plan-from-openspec             -- CORRECT: simulates --from-openspec with ready-for-plan stage, tasks.md present
+#   plan-from-openspec-no-tasks    -- CORRECT: simulates --from-openspec with spec-in-progress stage, no tasks.md
+#   plan-creates-skill             -- CORRECT: simulates a request to plan a new skill; exercises skill-docs-required guardrail (Fixes #185)
+
+- description: "plan-sdlc: asks whether to execute after plan is written"
+  vars:
+    skill_path: "skills/plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-written.md"
+    user_request: >
+      Run /plan-sdlc. The plan has been written to ~/.claude/plans/2026-03-19-user-authentication.md
+      and passed the plan review loop. Step 7 handoff is now active. Present the next action
+      options to the user.
+  assert:
+    # Must offer execute as a next action
+    - type: icontains
+      value: "/execute-plan-sdlc"
+    # Must offer commit as an option
+    - type: icontains
+      value: "/commit-sdlc"
+    # Must offer done as an option
+    - type: icontains
+      value: "done"
+    # Behavioral: interactive choice to execute or stop
+    - type: llm-rubric
+      value: >
+        The response asks the user whether to execute the plan now, presenting an interactive
+        choice rather than a passive suggestion. The menu includes at minimum: execute
+        (/execute-plan-sdlc), commit (/commit-sdlc), and done. The response mentions the plan
+        file path and waits for the user to select an option before proceeding.
+
+- description: "plan-sdlc: --from-openspec adopts tasks.md as primary skeleton"
+  vars:
+    skill_path: "skills/plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-from-openspec.md"
+    user_request: >
+      Run /plan-sdlc --from-openspec add-resource-indicators. The plan-prepare.js output
+      and OpenSpec artifacts are provided in the project context above. The --from-openspec
+      flag was passed, fromOpenspec.valid is true, and tasks.md is present with 5 tasks.
+      Process Step 0 (context detection, fromOpenspecDirect handling) and Step 1
+      (fromOpenspecDirect enrichment). Show how you would begin decomposition in Step 2,
+      using tasks.md as the primary skeleton.
+  assert:
+    # Must use tasks.md as skeleton
+    - type: icontains
+      value: "tasks.md"
+    # Must include SDLC metadata in tasks
+    - type: icontains
+      value: "Complexity"
+    - type: icontains
+      value: "Risk"
+    # Must NOT show the 3-option gate check prompt
+    - type: not-icontains
+      value: "Start OpenSpec flow"
+    # Behavioral: tasks.md drives decomposition, not structured discovery
+    - type: llm-rubric
+      value: >
+        The response uses the OpenSpec tasks.md checklist as the primary decomposition
+        skeleton. It does NOT present a 3-option gate check (Start OpenSpec flow / Continue
+        planning directly / Use existing spec). It does NOT ask structured discovery
+        questions (scope, integration, success). Instead, it adopts the 5 tasks from
+        tasks.md, enriches them with SDLC metadata (Complexity, Risk, Depends on, Verify),
+        and expands descriptions to be self-contained for agent dispatch. The delta specs
+        are referenced as authoritative requirements.
+
+- description: "plan-sdlc: --from-openspec without tasks.md falls back to standard decomposition"
+  vars:
+    skill_path: "skills/plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-from-openspec-no-tasks.md"
+    user_request: >
+      Run /plan-sdlc --from-openspec add-webhooks. The plan-prepare.js output and OpenSpec
+      artifacts are provided in the project context above. The --from-openspec flag was
+      passed, fromOpenspec.valid is true, but hasTasks is false (no tasks.md). Process
+      Step 0 and show how you would proceed with Steps 1 and 2 without a tasks.md skeleton.
+  assert:
+    # Must still load OpenSpec artifacts
+    - type: icontains
+      value: "proposal"
+    # Must mention delta specs as requirements
+    - type: icontains
+      value: "spec"
+    # Must decompose from specs (not from tasks.md)
+    - type: llm-rubric
+      value: >
+        The response processes the --from-openspec flag successfully despite tasks.md being
+        absent. It falls back to standard decomposition using the delta specs
+        (webhook-delivery.md, webhook-registration.md) as authoritative requirements. It
+        reads the proposal for scope and uses the ADDED sections from delta specs to derive
+        tasks. It does NOT error out or ask the user to create tasks.md first. The gate
+        check is still bypassed because --from-openspec was passed.
+
+- description: "plan-sdlc: emits override audit line when contradictory signal present"
+  vars:
+    skill_path: "skills/plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-contradictory-signal.md"
+    user_request: >
+      Run /plan-sdlc. The plan-prepare.js output and session-start context are provided above.
+      The prepare output shows openspec.authoritative.path is set to "openspec/config.yaml".
+      The session-start system-reminder contains both SDLC's "OpenSpec: INITIALIZED" line and
+      a contradictory "openspec: not initialized" line from a co-installed plugin. Process
+      Step 0 (context detection) and show how you handle the contradictory signal before
+      proceeding to the gate check.
+  assert:
+    # Must emit the override audit line
+    - type: icontains
+      value: "Ignoring contradictory"
+    - type: icontains
+      value: "not initialized"
+    # Must reference the authoritative source
+    - type: icontains
+      value: "openspec/config.yaml"
+    # Must NOT suggest initializing OpenSpec (it's already initialized)
+    - type: not-icontains
+      value: "Initialize OpenSpec"
+    # Behavioral: contradictory signal is dismissed, not acted upon
+    - type: llm-rubric
+      value: >
+        The response detects the contradictory "openspec: not initialized" signal in the
+        session context and emits exactly one audit line noting that it is being ignored,
+        citing openspec/config.yaml as the authoritative source from the plan.js prepare
+        output. The response does NOT treat OpenSpec as uninitialized, does NOT suggest
+        running openspec init, and does NOT add an "initialize OpenSpec" task to the plan.
+        The skill flow continues normally with OpenSpec detected as present.
+
+- description: "plan-sdlc: new-skill plan includes all four companion artifacts (Fixes #185)"
+  vars:
+    skill_path: "skills/plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-creates-skill.md"
+    user_request: >
+      Run /plan-sdlc. The user wants a new skill named example-skill (see project context
+      above for the full request and active guardrails). Produce the plan. The
+      skill-docs-required guardrail requires that any plan creating
+      plugins/*/skills/*/SKILL.md must also create docs/specs/<name>.md,
+      docs/skills/<name>.md, a README.md skills-table entry, and a
+      site/src/data/skills-meta.ts SkillCard entry. Show the resulting plan with all tasks
+      and their Files lists.
+  assert:
+    # Spec companion (docs/specs)
+    - type: icontains
+      value: "docs/specs/example-skill.md"
+    # Reference doc companion (docs/skills)
+    - type: icontains
+      value: "docs/skills/example-skill.md"
+    # README skills-table row
+    - type: icontains
+      value: "README.md"
+    # SkillCard registry entry
+    - type: icontains
+      value: "site/src/data/skills-meta.ts"
+    # The SKILL.md task itself
+    - type: icontains
+      value: "skills/example-skill/SKILL.md"
+    # Behavioral: all four companion artifacts present and spec-first ordering respected
+    - type: llm-rubric
+      value: >
+        The plan creates skills/example-skill/SKILL.md AND includes
+        tasks (or file entries within tasks) covering all four companion artifacts:
+        (1) docs/specs/example-skill.md, (2) docs/skills/example-skill.md,
+        (3) a README.md skills-table row update, and (4) a site/src/data/skills-meta.ts
+        SkillCard registry entry. The spec task is ordered before the SKILL.md task
+        (spec-first). No companion is omitted. The plan does not include a step that runs
+        full-suite or wide-subset promptfoo eval automatically (a single targeted test case
+        scoped to the changed surface is allowed under the relaxed #228 policy).
+
+
+# Issue #228 — relaxed no-auto-eval policy: single targeted test allowed.
+- description: "plan-sdlc: no-auto-eval — single targeted test as final verification PASSES guardrail (issue #228)"
+  vars:
+    skill_path: "skills/plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-creates-skill.md"
+    user_request: >
+      Plan must include exactly one targeted promptfoo eval test case scoped to the new
+      example-skill behavior as a FINAL verification step (after implementation). Do not
+      include full-suite or wide-subset eval, and no run-fix-rerun retry loops. The
+      single targeted test case is permitted by the no-auto-eval guardrail.
+  assert:
+    - type: icontains
+      value: "single targeted test case"
+    - type: llm-rubric
+      value: >
+        The plan includes exactly one targeted promptfoo eval test case scoped to the
+        example-skill change as a final verification step. The plan does NOT include a
+        step that runs the full-suite promptfoo eval, does NOT include wide-subset eval,
+        and does NOT include tight-loop retry logic (run-fix-rerun). The plan's
+        Guardrail Compliance table marks `no-auto-eval` as PASS with a rationale citing
+        the single-test carve-out from the relaxed #228 policy.
+
+
+- description: "plan-sdlc: no-auto-eval — tight-loop retry remains a guardrail FAILURE (issue #228)"
+  vars:
+    skill_path: "skills/plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-creates-skill.md"
+    user_request: >
+      Suppose a plan includes a "run promptfoo eval, fix, rerun until green" loop on a
+      single test case. Walk through Step 4 (Critique) and explain whether this PASSES
+      or FAILS the no-auto-eval guardrail under the relaxed #228 policy.
+  assert:
+    - type: icontains
+      value: "FAIL"
+    - type: llm-rubric
+      value: >
+        The response correctly identifies the tight-loop retry pattern as a no-auto-eval
+        guardrail FAILURE. The response cites that under the relaxed policy, single targeted
+        test cases are allowed only as one-shot verification — tight-loop retries (run-fix-rerun)
+        remain forbidden. The response does NOT classify the plan as PASS.
+
+
+- description: "plan-sdlc: link verification (R18, #198) — invokes script gate at Step 6.5 before handoff"
+  vars:
+    skill_path: "skills/plan-sdlc/SKILL.md"
+    project_context: "file://fixtures/plan-creates-skill.md"
+    user_request: >
+      You wrote a plan file that references https://github.com/wrong-owner/sdlc-marketplace/issues/999.
+      Walk through Step 6.5 (Link Verification). Show the exact bash command(s) you would run and what
+      happens on non-zero exit. Do not skip to Step 7.
+  assert:
+    - type: icontains
+      value: "scripts/lib/links.js"
+    - type: icontains
+      value: "Step 7"
+    - type: llm-rubric
+      value: >
+        The response describes invoking scripts/lib/links.js as a hard gate
+        before Step 7 (Handoff), passing the plan file via --file, and explicitly states that on
+        non-zero exit Step 7 is NOT entered. The gate is script-enforced. The skill does not propose
+        retrying, editing URLs without user input, or bypassing.

@@ -1,0 +1,14 @@
+# my custom ignore
+foo.tmp
+*
+!.gitignore
+!config.json
+!review-dimensions/
+!review-dimensions/**
+# >>> sdlc-utilities managed (do not edit) — selective ignores
+*
+!.gitignore
+!config.json
+!review-dimensions/
+!review-dimensions/**
+# <<< sdlc-utilities managed

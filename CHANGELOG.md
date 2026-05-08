@@ -1,0 +1,788 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+- ship-sdlc: post-PR CI verification and remote-review awaiting are now opt-in via `ship.steps[]` entries (`verify-pipeline`, `await-remote-review`). Boolean flags `ship.verifyPipeline` / `ship.awaitReview` removed; CLI flags `--verify-pipeline` / `--await-review` removed (passing them now produces a clear migration-pointer error). Schema bumped v3 → v4 with auto-migration on first read.
+
+### Renamed
+- `await-review.js` → `await-remote-review.js`; `awaitReviewExhausted` state marker → `awaitRemoteReviewExhausted`; `ship.awaitReviewTimeout` / `awaitReviewInterval` / `awaitReviewers` → `ship.awaitRemoteReviewTimeout` / `awaitRemoteReviewInterval` / `awaitRemoteReviewers`.
+
+### Migration
+- v3 → v4 LOCAL config migration runs automatically on first read: legacy boolean `ship.verifyPipeline: true` / `ship.awaitReview: true` are rewritten as `verify-pipeline` / `await-remote-review` entries appended to `ship.steps[]`; `awaitReview*` tunable keys are renamed to `awaitRemoteReview*` (values preserved); legacy keys are removed.
+
+## [0.19.3] - 2026-05-08
+
+### Added
+- plan-sdlc: added stop-plan-integrity hook to verify plan traverses all quality gates when presenting release plan (#285)
+
+### Fixed
+- plan-sdlc: fixed $SCRIPT scope bug in Step 5 marker blocks — each --mark block now re-resolves independently to ensure correct path resolution (#285)
+- plan-integrity: deferred stdin I/O to fallback path only, eliminating synchronous blocking on common execution path (#285)
+
+## [0.19.2] - 2026-05-08
+
+### Changed
+- shared lib: extracted duplicated utilities from skill scripts into lib/ modules (diff-truncate, jira-keys, yaml, dimensions, version, state, output, discovery) removing ~250 lines of duplication (#284)
+- shared scripts: improved comment and documentation clarity in diff-truncate.js (UTF-16 unit semantics), output.js (legacy writeJsonLine call shape), and plan-handoff-advisory.js (process.exit control flow) (#284)
+
+## [0.19.1] - 2026-05-08
+
+### Added
+- docs: updated configuration references to use current schema version (v4)
+
+### Fixed
+- ship-sdlc: added error guards for missing script resolution
+- verify-pipeline-sdlc: fixed dynamic script path resolution
+- await-review.js: removed bogus state marker that prematurely signaled completion
+
+## [0.19.0] - 2026-05-08
+
+### Added
+- ship-sdlc: post-PR CI verification and Copilot review integration with pipeline status polling and GitHub Copilot review completion awaiting (#130)
+- verify-pipeline-sdlc: new skill to poll GitHub workflow status until success or failure (#130)
+- verify-pipeline.js, await-review.js, verify-pipeline-sdlc-classify.js: supporting scripts for CI verification and test failure classification (#130)
+- git.js: enhanced utilities for multi-tenant Jira caching in ship.js (#130)
+
+### Fixed
+- await-review.js: removed bogus 'awaitReviewExhausted' state marker that prematurely signaled verdict completion (#130)
+- ship-sdlc and verify-pipeline-sdlc: added missing error guards to handle script resolution failures when sdlc plugin is not installed (#130)
+- verify-pipeline-sdlc: fixed hardcoded paths to use dynamic script resolution pattern consistent with other skills (#130)
+
+## [0.18.14] - 2026-05-08
+
+### Added
+- guardrails: added five planning-discipline always-on guardrails for plan targets — enforcing root-problem statement, minimum viable scope identification, failure-audience naming, explicit non-goal listing, and a hard gate on ambiguous patterns (#270)
+
+## [0.18.13] - 2026-05-07
+
+### Added
+- setup-sdlc: added five planning-discipline always-on guardrails for plan targets — enforcing root-problem statement, minimum viable scope identification, failure-audience naming, explicit non-goal listing, and hard gate on ambiguous patterns (#270)
+
+### Fixed
+- testbed and harvest-learnings: reliability fixes including assertions extraction, direct JSON parsing, and fixture path migration from `.claude/sdlc.json` to `.sdlc/config.json`; added error handling for invalid JSON and missing cluster guard (#251, #252, #253)
+
+## [0.18.12] - 2026-05-07
+
+### Fixed
+- harvest-learnings: added error handling for invalid JSON output and missing cluster guard to prevent uncaught errors during commit clustering (#242)
+- test infrastructure: extracted inline assertions to external file, simplified harvest-learnings test assertions with direct JSON parsing, and migrated fixture path from `.claude/sdlc.json` to `.sdlc/config.json` (#251, #252, #253)
+
+## [0.18.11] - 2026-05-07
+
+### Fixed
+- ship-sdlc: reviewThreshold config now correctly applied to received-review dispatch threshold gate (#275)
+- jira-sdlc: PreToolUse write-guard hook no longer incorrectly denies addCommentToJiraIssue due to hash mismatch; placeholder detection improved with exact match logic (#275, #276)
+
+## [0.18.10] - 2026-05-07
+
+### Added
+- review-sdlc: added OWASP Top 10 (2024) security review dimension; findings are auto-tagged with OWASP category codes (A01–A10) and default severity levels (#272)
+
+## [0.18.9] - 2026-05-07
+
+### Fixed
+- promptfoo exec test provider: auto-read temporary file paths from script stdout — when a script's stdout is a single-line path matching the system temp directory pattern, the provider now reads the file content instead of returning the raw path (#273)
+- config.js: normalize `.sdlc`-gitignore separator from double-newline to single-newline to prevent separator accumulation on repeated writes (#242–#250)
+
+## [0.18.8] - 2026-05-07
+
+### Fixed
+- setup-sdlc: default configuration flow now walks every configurable field with keep/change/unset actions; `--force` re-prompts all values; end-of-run diff preview shown before any config write; zero-change writes skipped (#235)
+- setup-sdlc: clarified `--force` flag description and added `--unset-only` cross-reference in docs (#228)
+- pr-sdlc: added `expectedAccount` field (defaults to origin remote owner) to validate PR target account (#234)
+- pr-sdlc: PR template now scaffolds to `.sdlc/pr-template.md`; deprecated `.claude/pr-template.md` path no longer written (#234)
+- pr-sdlc: removed redundant preflight halt block already covered by `errors[]` check (#228)
+- Shell quoting hardened in diff preview block to prevent injection (#228)
+
+## [0.18.7] - 2026-05-07
+
+### Fixed
+- config.js: added blank-line normalization to prevent accumulation during repeated `ensureSdlcGitignore()` / `ensureRootGitignore()` runs (#266)
+- hooks: pre-compact-save, stop-state-save, and post-tool-validate now use per-branch `.compact-recovery` filenames to prevent cross-branch interference (#256)
+- ship-sdlc: added pruning of orphaned state files on `--init` (#255)
+- guardrails: route dimension operations through `resolveDimensionsDir()` for consistent directory resolution (#259)
+- pr-template: canonicalized PR template location from `.claude/pr-template.md` to `.sdlc/pr-template.md`; deprecated path migrated automatically (#260)
+- script resolution: all skills now pick the newest installed plugin version using `sort -V | tail -1` instead of `head -1` (#258)
+
+## [0.18.6] - 2026-05-07
+
+### Fixed
+- script resolution: all skills now pick the newest installed plugin version using `sort -V | tail -1` instead of `head -1`, preventing arbitrary cache version selection when multiple versions are installed; downstream symptoms (#261–#264) where `/setup-sdlc` reported config sections as [not set] are also resolved (#258)
+- execute-plan-sdlc: renamed internal `SCRIPT` variable to `STATE_SCRIPT` in state-persistence block to eliminate silent variable shadowing
+
+## [0.18.5] - 2026-05-07
+
+### Fixed
+- jira-sdlc: hardened cloudId auth-error recovery with automatic namespace retry and cache update; narrowed placeholder detection regex to reduce false positives on ADF payloads (#240)
+- jira-sdlc: fixed tmpdir canonicalization via `fs.realpathSync` to handle macOS symlink chains in artifact-store; added dual-hash diagnostics to write-guard hook for easier debugging (#240)
+- jira-sdlc: issue type template fallback map (Sub-bug → Bug, Sub-task → Task) now consulted before resolving to no template; adds Sub-task.md template (#240)
+
+## [0.18.4] - 2026-05-06
+
+### Fixed
+- review-sdlc, pr-sdlc: use three-dot diffs to exclude stale base commits on non-rebased branches; adds `fetchBaseRef()` to refresh local base before diff computation and `buildBranchContribDiffCmd()` to centralize three-dot diff semantics (#239)
+- git-lib: corrected inverted test assertions and enforce contract violations with `process.exit(1)` on `fetchBaseRef` failures (#239)
+
+## [0.18.3] - 2026-05-06
+
+### Added
+- received-review-sdlc: added configurable `alwaysFixSeverities` — a per-user, per-project allowlist of finding severities whose "agree, will fix" verdicts bypass consent gates (#233)
+
+### Fixed
+- received-review-sdlc: `--auto` mode now falls back to the original behavior (auto-apply all "will fix" findings) when `alwaysFixSeverities` is unconfigured, preserving backward compatibility for existing users (#233)
+
+## [0.18.0] - 2026-05-06
+
+### Added
+- harden-sdlc: new skill for analyzing SDLC pipeline failures and proposing targeted hardening changes across plan guardrails, execute guardrails, review dimensions, copilot instructions, and plugin self-bugs (#221)
+
+### Fixed
+- harden-sdlc: corrected orchestrator agent behavior to ensure failure analysis correctly routes through all five hardening surfaces (#220)
+- state module: lifted shared `listBranches()` and `readTtlDaysFromConfig()` helpers to `lib/state.js`, eliminating duplicate implementations across ship and execute state modules (#227)
+
+## [0.17.46] - 2026-05-05
+
+### Added
+- review-sdlc: added runtime-contract and skill-architecture review dimensions to prevent changelog-related regressions (#224)
+
+### Fixed
+- version-sdlc: fixed CHANGELOG generation being skipped when `--auto` mode is active; `config.changelog` is now correctly honored in auto mode (#219)
+
+## [0.17.43] - 2026-05-05
+
+### Fixed
+- version-sdlc: fixed plugin.json corruption during version bump by switching to targeted field replacement with a post-edit diff gate (#211)
+- version-sdlc: fixed `--output-file` flag parser consuming the following positional argument (e.g. `patch`), causing incorrect bump resolution (#212)
+- version-sdlc: `config.changelog` is now respected without requiring an explicit `--changelog` flag; unified changelog gate reads from both flags and config (#213)
+
+## [0.17.40] - 2026-05-05
+
+### Fixed
+- setup-sdlc: corrected review dimension file count to look for `.md` files instead of `.yaml`/`.yml`, fixing dimensions always reporting a count of 0 (#203)
+
+## [0.17.39] - 2026-05-05
+
+### Added
+- review-sdlc: per-dimension model override — dimension frontmatter can declare a `model` field that overrides the manifest's `subagent_model` for that dimension; orchestrator dispatch uses `dimension.model || manifest.subagent_model` (R15) (#199)
+- review-sdlc: structural validation (D13) for `model` field in dimension frontmatter (#199)
+
+### Changed
+- sdlc-config: updated version and PR settings (#199)
+
+## [0.17.38] - 2026-05-05
+
+### Fixed
+- link-validation: added URL validator for all SDLC skills with GitHub identity match, Atlassian host validation, generic URL reachability checks, offline mode support, and skip-list for social platforms (#198)
+- link-validation: added missing exit guards to LINKS_LIB blocks (#198)
+
+## [0.17.36] - 2026-05-04
+
+### Added
+- setup-sdlc: replaced linear configuration flow with a selective multiselect menu; each section now shows a verbose header with purpose, affected files, and current value before prompting (#191)
+
+### Fixed
+- setup-sdlc: corrected stale documentation references, improved error logging, and replaced magic literals with named constants (#191)
+
+## [0.17.35] - 2026-05-04
+
+### Added
+- version-sdlc, ship-sdlc: support for pre-release bump labels via `--pre-release-bump-label` flag and `preReleaseBumpLabel` config option, enabling automated label assignment during pre-release versioning (#193)
+
+## [0.17.34] - 2026-05-03
+
+### Fixed
+- test infrastructure: converted exec-test provider declarations from string form to object form, fixing a "Could not identify provider" crash introduced by promptfoo 0.121.9 (#191)
+
+## [0.17.33] - 2026-05-03
+
+### Fixed
+- ship-sdlc: removed legacy `--preset` and `--skip` flags; `--preset` is renamed to `--quality`; users are now directed to `--steps` and `--quality` with clear error messages (#190)
+
+## [0.17.32] - 2026-04-29
+
+### Changed
+- plan-sdlc: added skill-docs-required guardrail to enforce documentation completeness checks (#185)
+
+## [0.17.31] - 2026-04-29
+
+### Fixed
+- pr-sdlc: post-failure gh-account-switch retry now correctly re-attempts the PR creation flow after switching GitHub accounts (#184)
+- pr-sdlc: null-check guard added for `verify.accounts` to prevent failures when account verification data is absent (#184)
+
+## [0.17.30] - 2026-04-29
+
+### Fixed
+- version-sdlc: consolidated upstream auto-set fix — release push now correctly sets the upstream branch on first push from untracked branches (#183)
+
+## [0.17.29] - 2026-04-28
+
+### Fixed
+- version-sdlc: auto-set upstream branch on first push when no upstream is configured (#183)
+
+### Changed
+- Internal maintenance: triaged and pruned stale learnings-log entries (#186)
+
+## [0.17.28] - 2026-04-28
+
+### Added
+- plan-sdlc, ship-sdlc, execute-plan-sdlc: added context-heaviness advisory to warn users when context window usage is high (#173)
+
+## [0.17.27] - 2026-04-28
+
+### Added
+- ship-sdlc: replaced `preset` abstraction with `steps[]` as the canonical source of truth; CLI `--preset` and `--skip` now expand/subtract from the resolved steps array (#180)
+- ship-sdlc: added config schema versioning (v2) with automatic migration of legacy v1 preset-based configs (#180)
+
+### Fixed
+- ship-sdlc: corrected balanced preset defaults, BUILT_IN_DEFAULTS.steps alignment, setup-sdlc questionnaire steps emission, and stale skills-meta.ts file references (#180)
+
+## [0.17.26] - 2026-04-28
+
+### Added
+- jira-sdlc write-operation guardrails: artifact-based approval gates, placeholder detection, and PreToolUse hook enforcement for all write operations (Create, Edit, Transition, Comment, Link, Worklog) (#178)
+
+## [0.17.25] - 2026-04-27
+
+### Fixed
+- review-sdlc now displays the full comment body to the user before the posting prompt, ensuring all per-dimension findings and severity levels are visible before confirming (#176)
+
+## [0.17.24] - 2026-04-23
+
+### Fixed
+- review-sdlc post-confirm handling moved to the skill's main context, preventing the orchestrator from re-running the full review pipeline when the user confirms posting the PR comment; includes branch-name escaping for save paths, corrected field reference in review-orchestrator, and stale pipeline step types in skills-meta.ts (#167)
+
+## [0.17.23] - 2026-04-23
+
+### Added
+- jira-sdlc cache moved to `~/.sdlc-cache/jira/<site>/<KEY>.json` for XDG compliance; multi-project support via `jira.projects` array; new `--skip-workflow-discovery` flag for setup control
+
+### Fixed
+- jira-sdlc spec and doc hardening: R-number annotations, siteUrl format clarity, cache path handling, and additional roundtrip and home-cache layout tests
+
+## [0.17.22] - 2026-04-23
+
+### Added
+- received-review-sdlc now auto-executes Step 12 (reply to PR threads and resolve addressed items) when `--auto` is active, without an interactive consent gate (#131)
+
+## [0.17.21] - 2026-04-15
+
+### Added
+- OpenSpec integration across the SDLC pipeline: setup-sdlc enriches openspec/config.yaml with managed workflow guidance, ship-sdlc adds a conditional archive-openspec step, and execute-plan-sdlc suggests archival after pipeline completion (#162)
+
+### Fixed
+- OpenSpec archive step and test fixtures corrected after initial integration review (#162)
+
+## [0.17.20] - 2026-04-15
+
+### Fixed
+- openspec-detection hardened against contradictory session-start signals; plan-sdlc and ship-sdlc now respect the `openspecAuthoritative` field to override conflicting context (#164)
+
+## [0.17.19] - 2026-04-15
+
+### Fixed
+- Ship-config fields (auto, skip, bump) extracted into shared `ship-fields.js` library to prevent setup-sdlc from silently dropping questions during configuration (#152)
+
+## [0.17.18] - 2026-04-13
+
+### Fixed
+- Pipeline step cleanup now validates all steps reach a terminal state (completed, skipped, or failed), with violations surfaced as JSON for debugging (#159)
+- Per-step model routing assigned across the ship pipeline — subagents now use the correct model for each step rather than defaulting to opus (#159)
+
+## [0.17.17] - 2026-04-12
+
+### Fixed
+- CI scripts renamed from `.js` to `.cjs` to prevent ESM/CommonJS namespace collision when consumer repos use `"type": "module"` (#156)
+
+## [0.17.16] - 2026-04-12
+
+### Added
+- Jira comment posting now converts markdown to Atlassian Document Format (ADF), supporting headings, bold, italic, code blocks, lists, tables, blockquotes, links, and horizontal rules (#154)
+
+### Fixed
+- jira-sdlc documentation updated and script resolution guards added for markdown-to-ADF conversion (#154)
+
+## [0.17.15] - 2026-04-06
+
+### Added
+- Self-contained CI scripts with inlined config reading, and new `scaffold-ci.js` utility for deterministic CI file scaffolding with version tracking (#150)
+
+## [0.17.14] - 2026-04-06
+
+### Added
+- Pipeline safety validation hooks: stop-state-save, post-failure-error-report, pre-tool-git-guard, and validate-plan-format (#148)
+
+## [0.17.13] - 2026-04-04
+
+### Fixed
+- setup-sdlc centralized initialization via new `setup-init.js` utility script for unified config and local config writing (#129, #134)
+- setup-sdlc dimension scanning now uses Glob tool; permission constraints applied per spec (#129, #135, #133)
+- ship-sdlc fabrication guard and coherent flag handling (#136)
+- ship-sdlc auto workspace handling (#146)
+
+## [0.17.12] - 2026-04-04
+
+### Fixed
+- Guardrails detection expanded to cover Lambda HTTP APIs (via @middy/ dependencies), NoSQL databases (DynamoDB, MongoDB, Redis), and framework signals (zod, sentry, datadog, esbuild) (#137, #138, #139)
+
+## [0.17.11] - 2026-04-04
+
+### Added
+- Step-emitter architecture with shared `lib/stepper.js` module that inverts control between SDLC skill scripts and the LLM (#143)
+- P-STEP, P-TRANS, and C-STEP requirement fields added to all 9 skill specifications (#143)
+
+## [0.17.10] - 2026-04-04
+
+### Added
+- Specification files for all SDLC skills as authoritative source of truth for workflows and requirements (#133)
+- Spec-compliance review dimension and plan guardrail enforcing spec-first development (#133)
+
+### Changed
+- Scripts reorganized from flat `scripts/` directory into logical subdirectories (`skill/`, `ci/`, `state/`, `util/`) with backward-compatible installation paths (#141)
+
+## [0.17.9] - 2026-04-03
+
+### Fixed
+- received-review-sdlc now supports `--auto` flag to skip consent gate and auto-implement review fixes in the ship pipeline (#117)
+
+## [0.17.8] - 2026-04-03
+
+### Added
+- OpenSpec documentation section on the site — landing page, overview, integration guide, and handover workflow pages with navigation dropdown and cross-linking (#127)
+
+## [0.17.7] - 2026-04-02
+
+### Added
+- OpenSpec integration bridge with stage hints for bidirectional workflow between OpenSpec specification and SDLC planning (#125)
+
+### Fixed
+- plan-sdlc now correctly captures plan-prepare.js exit code in VERBATIM block (#125)
+
+## [0.17.6] - 2026-04-01
+
+### Changed
+- Execution presets renamed from A/B/C to full/balanced/minimal with backward compatibility for legacy values (#114)
+- YAGNI added as a default guardrail proposal alongside existing DRY and KISS (#120)
+
+## [0.17.5] - 2026-04-01
+
+### Fixed
+- Atomic state file writes to prevent corruption from parallel worktree access (#109)
+- Ship pipeline sub-skills dispatched as Agents to eliminate context pollution in later steps (#119)
+- `skipSource` field added to ship-prepare.js step output for skip-flag provenance tracking (#118)
+- Network-dependent commands gain retry logic via `retryExec` helper with exponential backoff (#116)
+
+## [0.17.4] - 2026-04-01
+
+### Fixed
+- commit-sdlc "Prompt is too long" error when staging large diffs — truncates diffs to an 8000-character budget, keeping the largest file diffs and using diffstat for the rest (#115)
+
+## [0.17.3] - 2026-04-01
+
+### Added
+- Execution guardrails evaluation (pre-wave and post-wave checks) with separate `execute.guardrails[]` config section (#103)
+- `/setup-sdlc --execution-guardrails` sub-flow for configuring runtime guardrails (#103)
+
+### Fixed
+- Guardrail proposal generation for execute context now uses execution-specific descriptions (#103)
+
+## [0.17.2] - 2026-04-01
+
+### Fixed
+- Script resolution `find` patterns now scoped to `*/sdlc*` to prevent cross-plugin collisions (#111)
+- Auto mode execution no longer resumes from stale state files without explicit `--resume` (#110)
+- Synced plan-sdlc and execute-plan-sdlc docs with SKILL.md changes (#107, #108, #110)
+- received-review-sdlc fallback pattern aligned with other skills (#111)
+
+### Changed
+- Plan handoff menu now offers ship (full pipeline) as the primary option (#108)
+- Ship pipeline includes context budget awareness guidance for inter-step compaction (#105)
+- Plan approval output no longer includes wave preview (#107)
+
+### Added
+- DRY and KISS plan guardrails
+
+## [0.17.1] - 2026-03-31
+
+### Fixed
+- False gitignore warning when `.sdlc/.gitignore` exists instead of root `.gitignore` entry (#99)
+- `mktemp` collision in prepare script invocations — replaced with script-driven `--output-file` flag using crypto-random temp filenames (#101)
+- `execute-plan-sdlc` interactive prompts when config provides all answers — added `--auto` flag for non-interactive execution (#104)
+- Auto-mode workspace default now overrides from `prompt` to `branch` in ship-prepare.js (#104)
+- Missing prefix argument in `jira-prepare.js` `writeOutput` call causing wrong exit code
+
+### Changed
+- Migrated legacy unit tests to promptfoo exec datasets (#100)
+- `validate-plugin-consistency` now checks for `--output-file` instead of `mktemp`
+
+## [0.17.0] - 2026-03-31
+
+### Changed
+- Consolidated review-init-sdlc, pr-customize-sdlc, and guardrails-init-sdlc into setup-sdlc as internal sub-flows with `--dimensions`, `--pr-template`, and `--guardrails` flags (#94)
+
+## [0.16.13] - 2026-03-31
+
+### Added
+- Custom plan guardrails support — configurable `plan.guardrails[]` in sdlc.json with interactive `/guardrails-init-sdlc` skill for project-aware proposal generation (#91)
+
+### Fixed
+- Review dimension detection in guardrails-prepare.js now correctly identifies `.md` dimension files
+
+## [0.16.12] - 2026-03-31
+
+### Fixed
+- Ship pipeline LLM now uses computed `invocation` field from ship-prepare.js output instead of copying hardcoded example args from SKILL.md (#97)
+
+## [0.16.11] - 2026-03-31
+
+### Added
+- Configurable message patterns for commit and PR skills
+- New review dimensions: dependency-management and ui-review
+
+## [0.16.10] - 2026-03-31
+
+### Fixed
+- Worktree PRs no longer fail CI version check — `pr-sdlc` now accepts `--label` flag for forced labels, and `ship-sdlc` auto-applies `skip-version-check` when workspace is worktree (#88)
+
+## [0.16.9] - 2026-03-31
+
+### Fixed
+- `setup-sdlc` now detects stale `ship` sections left in project config after migration and triggers cleanup automatically (#90)
+
+## [0.16.8] - 2026-03-31
+
+### Added
+- Unified configuration: consolidates 4 config files into 2 (`sdlc.json` + `local.json`) with centralized `lib/config.js` and `/setup-sdlc` skill for one-step project initialization (#86)
+- Hook-based context injection: session-start hook detects pipeline resume, OpenSpec context, git status, Jira cache staleness, and ship config; adds PostToolUse and PreCompact hooks for workflow awareness (#85)
+
+### Fixed
+- Ship config section moved from project config to local config; legacy fallback now resolves review and ship sections independently instead of returning early on first match (#87)
+
+## [0.16.7] - 2026-03-30
+
+### Added
+- JSON Schema definitions for all SDLC configuration files — enables IDE autocompletion and inline validation for ship-config, review-config, version-config, jira-config, plugin.json, ship-state, execute-state, and review-dimension frontmatter (#80)
+
+### Changed
+- User-local SDLC state (review.json, jira-cache/) migrated from `.claude/` to `.sdlc/` with backward-compatible fallback reads and deprecation warnings (#81)
+- `$schema` references in ship-config.json and version.json updated from placeholder labels to resolvable raw GitHub URLs
+
+## [0.16.6] - 2026-03-30
+
+### Added
+- SessionStart hook that outputs plugin version and skill count into every session's system-reminder context (#82)
+- Per-skill version announcement for all 11 user-invocable skills — extracts version from session-start hook output at runtime (#82)
+
+## [0.16.5] - 2026-03-29
+
+### Fixed
+- `--workspace worktree` flag now creates actual git worktrees via `worktree-create.js` instead of falling back to branch checkout (#78)
+- State file I/O moved from LLM instructions to deterministic scripts (`ship-state.js`, `execute-state.js`, `lib/state.js`)
+- Branch name validation in worktree creation prevents command injection via shell metacharacters
+- State file slug matching uses delimiter-aware patterns to prevent partial branch name collisions
+- Missing flags restored in argument-hint frontmatter: ship-sdlc (`--resume`, `--bump`, `--workspace`, `--init-config`) and execute-plan-sdlc (`--workspace`, `--rebase`)
+
+## [0.16.4] - 2026-03-29
+
+### Added
+- `--auto` flag for version-sdlc — skips interactive release approval prompt while retaining critique gates and pre-condition checks (#73)
+- `ship-sdlc` now forwards `--auto` to version-sdlc, removing the last mandatory pause point in fully automated pipelines
+
+## [0.16.3] - 2026-03-29
+
+### Fixed
+- GitHub hosting detection in `review-init-sdlc` now handles custom SSH aliases via multi-signal cascade (#70)
+
+## [0.16.2] - 2026-03-29
+
+### Added
+- New review dimensions for expanded code analysis coverage
+
+### Fixed
+- Resolved issues #66 and #68
+
+## [0.16.1] - 2026-03-28
+
+### Added
+- Pause/resume support for `execute-plan-sdlc` — writes execution state to `.sdlc/execution/` after each wave, enabling cross-session resume via `--resume` flag (#67)
+- `ship-sdlc` forwards `--resume` to `execute-plan-sdlc` when resuming a pipeline with an in-progress execute step
+
+## [0.16.0] - 2026-03-27
+
+### Added
+- `ship-sdlc` skill for end-to-end feature shipping — chains execute, commit, review, fix, version, and PR creation in a single pipeline (#60)
+- Full orchestration workflow page on the documentation site
+- Ship pipeline visualization component for the docs site
+
+### Changed
+- Redesigned documentation site skill pages and workflow navigation
+
+## [0.15.2] - 2026-03-27
+
+### Added
+- `--auto` flag for commit-sdlc — skips interactive approval prompt while retaining all critique gates (#58)
+- `--auto` flag for pr-sdlc — skips interactive approval prompt and auto-applies inferred labels (#59)
+
+### Changed
+- PR description "Changes Overview" section now requires concept-level bullets describing behavior changes instead of file-path listings (#62)
+- Auto-label inference in pr-sdlc applies labels directly without a separate approval prompt in auto mode (#61)
+- Reordered "What's Next" suggestions in commit-sdlc and execute-plan-sdlc to list review before PR creation
+
+## [0.15.1] - 2026-03-26
+
+### Added
+- Final holistic spec completeness check (Step 8-bis) in execute-plan-sdlc — verifies cross-wave OpenSpec requirements coverage after all waves complete (#49)
+- OpenSpec completion handoff in execute-plan-sdlc — suggests `/opsx:verify` and `/opsx:archive` after plan execution (#49)
+- Post-merge OpenSpec guidance in pr-sdlc — suggests verification and archival steps in What's Next (#49)
+- `OpenSpec-Change` commit trailer in commit-sdlc for spec-to-commit traceability (#49)
+
+## [0.15.0] - 2026-03-26
+
+### Added
+- PR thread reply and resolve workflow in received-review-sdlc — posts replies to addressed comments and resolves threads after user consent (#50)
+- Pre-compute script (`received-review-prepare.js`) for incremental review processing — skips resolved, self-replied, and stale threads (#50)
+- Shared git helper library (`scripts/lib/git.js`) for PR and review data retrieval (#50)
+- Interactive template suggestion in jira-sdlc `--init-templates` — proposes default templates for unmapped issue types based on Jira hierarchy level (#46)
+- Unit tests for jira-prepare.js (#47)
+
+### Changed
+- jira-sdlc now captures `hierarchyLevel` in issue type metadata for hierarchy-aware template matching (#46)
+- review-init-sdlc detects GitHub hosting before prompting for Copilot instructions — skips the prompt entirely for non-GitHub repos (#48)
+
+## [0.14.7] - 2026-03-26
+
+### Fixed
+- Workspace isolation check in execute-plan-sdlc no longer relies on stale session-level branch snapshot — always detects the current branch via live git state (#55)
+
+## [0.14.6] - 2026-03-26
+
+### Added
+- Auto-label inference in PR creation — analyzes branch name, commit messages, changed file paths, and diff size to suggest repository labels, with mandatory user approval before applying
+
+## [0.14.5] - 2026-03-26
+
+### Added
+- Workspace isolation check in execute-plan-sdlc — detects when execution starts on the default branch and offers to create a feature branch or worktree before proceeding
+
+### Changed
+- Removed references to non-existent `plugin-check-sdlc` skill from consistency validation
+- Added Github Issue section to the PR description template
+
+## [0.14.4] - 2026-03-22
+
+### Changed
+- Updated Jira issue description templates
+
+## [0.14.3] - 2026-03-21
+
+### Added
+- New review dimension for expanded code analysis coverage
+- Autonomous detection in PR creation workflow
+
+### Changed
+- Updated GitHub Pages documentation to cover openspec workflows
+- Refined openspec skill integration
+- Optimized review skill performance
+
+## [0.14.2] - 2026-03-21
+
+### Added
+- OpenSpec CLI integration for spec-driven development workflows
+
+### Changed
+- Improved skill descriptions and interaction patterns
+- Updated plan skill decomposition and output
+
+## [0.14.1] - 2026-03-20
+
+### Added
+- `argument-hint` frontmatter field across all user-invocable skills for autocomplete hints in the `/` menu
+- Plan Mode detection in skills that require write operations — stops and instructs to exit plan mode before proceeding
+
+### Changed
+- User approval prompts now use `AskUserQuestion` for structured interaction
+- Replaced interactive "Workflow Continuation" menus with static "What's Next" reference sections
+- Improved plan-sdlc task decomposition and reviewer prompt
+- Added harness integration fields documentation to the adding-skills guide
+
+## [0.14.0] - 2026-03-20
+
+### Added
+- Consent gate in `received-review-sdlc` requiring explicit user approval before any PR changes or code modifications
+- Full codebase context verification in `received-review-sdlc` — traces callers, dependents, and architectural intent instead of only checking the change diff
+
+### Changed
+- Renamed `review-receive-sdlc` to `received-review-sdlc` across all documentation, tests, and site pages
+- Internal critique steps in `received-review-sdlc` no longer produce user-visible output
+
+## [0.13.2] - 2026-03-20
+
+### Fixed
+- Fixed build configuration
+
+## [0.13.1] - 2026-03-20
+
+### Changed
+- Refactored jira-sdlc, version-sdlc, and review-init-sdlc to use conditional loading for operation-specific content, reducing initial prompt size
+- Added Gotchas, DO NOT, Error Recovery, and Workflow Continuation sections to pr-customize-sdlc and review-init-sdlc
+- Added DO NOT section to review-sdlc
+- Updated plan-sdlc Workflow Continuation menu to include commit option
+- Added skill best practices documentation guide and removed guides section from site
+
+## [0.13.0] - 2026-03-19
+
+### Added
+- Skills now present an interactive "what next?" menu after completing, enabling automatable chains (jira → plan → execute → commit → pr → version)
+- Added `--preset` flag to `execute-plan-sdlc` to skip the A/B/C model selection prompt
+- Normalized `See Also` cross-skill links and added `Related Skills` sections across all SKILL.md and docs/skills/*.md files
+- Added promptfoo test datasets and fixtures for workflow continuation behavior
+
+### Changed
+- `execute-plan-sdlc` no longer shows a confirmation prompt before executing a plan (removed the "yes" confirmation gate)
+- Removed duplicate skill references in nav bar
+
+### Fixed
+- Fixed skill navigation links in the site
+- Fixed GitHub Pages deployment
+
+## [0.12.1] - 2026-03-19
+
+### Added
+- New documentation pages
+
+## [0.12.0] - 2026-03-19
+
+### Added
+- New planning skill for designing multi-step implementation plans before writing code
+
+### Changed
+- Plans directory location updated
+- Execution mode simplified
+
+## [0.11.5] - 2026-03-18
+
+### Added
+- Guardrails for skill execution to prevent unsafe automated behavior
+
+### Changed
+- Execution mode now propagates consistently across skill invocations
+- Improved bypass permissions handling during skill execution
+
+## [0.11.4] - 2026-03-18
+
+### Changed
+- Enabled changelog generation as part of the release workflow
+- Improved versioning behavior and configuration
+
+## [0.11.3] - 2026-03-16
+
+### Added
+- `commit-sdlc` skill for generating conventional commit messages from staged changes
+- Model presets support in `execute-plan-sdlc` for configuring Claude model selection per task
+
+## [0.11.2] - 2026-03-13
+
+### Fixed
+- `error-report-sdlc` now files issues in GitHub instead of Jira for broader compatibility
+
+## [0.11.1] - 2026-03-13
+
+### Added
+- `error-report-sdlc` skill for proposing GitHub issues when actionable errors occur in SDLC skills
+- Permanent Jira metadata cache in `jira-sdlc` to reduce redundant API calls
+
+## [0.11.0] - 2026-03-13
+
+### Added
+- `jira-sdlc` skill for creating, editing, searching, transitioning, and linking Jira issues via Atlassian MCP
+
+## [0.10.0] - 2026-03-12
+
+### Added
+- `execute-plan-sdlc` skill for adaptive parallel plan execution with wave dependency management
+- `received-review-sdlc` skill for responding to code review feedback with dual self-critique gate
+
+## [0.9.0] - 2026-03-12
+
+### Changed
+- All skills renamed to action-first naming convention (e.g. `pr-sdlc`, `review-sdlc`, `version-sdlc`)
+- Removed legacy `commands/` layer; all functionality now delivered through skills
+
+## [0.8.1] - 2026-03-08
+
+### Added
+- Smarter review dimension suggestions for files not covered by existing dimensions in `review-init-sdlc`
+
+## [0.8.0] - 2026-03-08
+
+### Added
+- `--hotfix` flag to `version-sdlc` for annotating releases with DORA metrics metadata
+
+## [0.7.3] - 2026-03-08
+
+### Added
+- `test-report` and `promptfoo-results` skills for analyzing promptfoo BDD test results and generating evidence reports
+
+## [0.7.2] - 2026-03-08
+
+### Added
+- `promptfoo` BDD test suite for automated SDLC skill behavior validation
+
+## [0.7.1] - 2026-03-06
+
+### Fixed
+- Script resolution moved into skills to prevent path-dependent failures; simplified `find` commands
+
+## [0.7.0] - 2026-03-06
+
+### Added
+- `plugin-check` command for validating plugin discovery and installation
+
+## [0.6.3] - 2026-03-05
+
+### Added
+- Review scope options (`committed`, `staged`, `working`, `worktree`) for `review-sdlc`
+
+## [0.6.2] - 2026-03-05
+
+### Fixed
+- Script resolution order corrected to prevent plugin scripts from shadowing project-local scripts
+- Plugin consistency validation added to catch structural issues before they reach users
+
+## [0.6.1] - 2026-03-05
+
+### Added
+- GitHub Copilot instructions generation in `review-init-sdlc`
+
+## [0.6.0] - 2026-03-04
+
+### Changed
+- All skills renamed with `sdlc-` prefix for namespace clarity
+- Added per-skill reference documentation
+
+## [0.5.3] - 2026-03-04
+
+### Fixed
+- Git identity now configured correctly in the `retag-release` CI workflow
+- Automated tag repair CI workflow now triggers correctly on push to main
+
+## [0.5.2] - 2026-03-04
+
+### Added
+- `retag-release.yml` CI workflow to automatically repair orphaned tags after squash merges to main
+
+## [0.5.1] - 2026-03-04
+
+### Added
+- `version-sdlc` skill for semantic version management (bump, tag, changelog, push)
+- `pr-customize-sdlc` skill for creating and managing custom PR templates
+- Review orchestrator now requires explicit user approval before executing review steps
+
+### Fixed
+- Script paths updated to use absolute resolution for cross-platform compatibility
+- Portable glob patterns for script and agent references

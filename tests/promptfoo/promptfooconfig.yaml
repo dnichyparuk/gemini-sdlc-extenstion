@@ -1,0 +1,33 @@
+description: "Behavioral regression tests for sdlc-gemini skills"
+
+evaluateOptions:
+  concurrency: 8
+
+providers:
+  - id: file://providers/gemini-cli.js
+
+prompts:
+  - file://prompts/skill-runner.txt
+
+defaultTest:
+  options:
+    transformVars: "file://scripts/extract-skill-content.js"
+    provider: "file://providers/gemini-cli.js"
+
+tests:
+  - file://datasets/pr-sdlc.yaml
+  - file://datasets/review-sdlc.yaml
+  - file://datasets/version-sdlc.yaml
+  - file://datasets/setup-sdlc.yaml
+  - file://datasets/setup-sdlc-dimensions.yaml
+  - file://datasets/setup-sdlc-pr-template.yaml
+  - file://datasets/execute-plan-sdlc.yaml
+  - file://datasets/commit-sdlc.yaml
+  - file://datasets/jira-sdlc.yaml
+  - file://datasets/plan-sdlc.yaml
+  - file://datasets/received-review-sdlc.yaml
+  - file://datasets/error-report-sdlc.yaml
+  - file://datasets/ship-sdlc.yaml
+  - file://datasets/harden-sdlc.yaml
+  - file://datasets/harvest-learnings.yaml
+  - file://datasets/verify-pipeline-sdlc.yaml

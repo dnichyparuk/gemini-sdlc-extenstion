@@ -1,0 +1,65 @@
+{
+  "name": "sdlc",
+  "version": "0.19.3",
+  "description": "Enterprise SDLC automation for Gemini CLI: PRs, code reviews, and release management",
+  "contextFileName": "GEMINI.md",
+  "hooks": {
+    "SessionStart": [
+      {
+        "name": "session-start",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}session-start.js"
+      }
+    ],
+    "BeforeAgent": [
+      {
+        "name": "context-stats",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}context-stats.js"
+      }
+    ],
+    "BeforeTool": [
+      {
+        "name": "git-guard",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}pre-tool-git-guard.js"
+      },
+      {
+        "name": "jira-write-guard",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}pre-tool-jira-write-guard.js"
+      }
+    ],
+    "AfterTool": [
+      {
+        "name": "post-tool-validate",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}post-tool-validate.js"
+      },
+      {
+        "name": "post-failure-error-report",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}post-failure-error-report.js"
+      }
+    ],
+    "PreCompress": [
+      {
+        "name": "pre-compact-save",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}pre-compact-save.js"
+      }
+    ],
+    "SessionEnd": [
+      {
+        "name": "stop-state-save",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}stop-state-save.js"
+      },
+      {
+        "name": "stop-plan-integrity",
+        "type": "command",
+        "command": "node ${extensionPath}${/}hooks${/}stop-plan-integrity.js"
+      }
+    ]
+  }
+}

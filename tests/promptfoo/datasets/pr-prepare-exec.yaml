@@ -1,0 +1,220 @@
+# Script execution tests for pr-prepare.js.
+# These tests run pr-prepare.js directly against fixture directories (no LLM).
+# Ported from tests/unit/pr-prepare.test.js.
+#
+# Note: pr-prepare.js calls gh CLI which fails without a remote.
+# Tests assert on fields populated before remote operations (flags, prConfig).
+
+- description: "pr-prepare: default flags with no args"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+  assert:
+    - type: icontains
+      value: '"isDraft": false'
+    - type: icontains
+      value: '"isAuto": false'
+
+- description: "pr-prepare: --draft flag"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--draft"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+  assert:
+    - type: icontains
+      value: '"isDraft": true'
+
+- description: "pr-prepare: --update flag"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--update"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+  assert:
+    - type: icontains
+      value: '"forceUpdate": true'
+
+- description: "pr-prepare: --base main override"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--base main"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+  assert:
+    - type: icontains
+      value: '"baseBranchOverride": "main"'
+
+- description: "pr-prepare: --auto flag"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--auto"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+  assert:
+    - type: icontains
+      value: '"isAuto": true'
+
+- description: "pr-prepare: --label bug --label feature adds both labels"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--label bug --label feature"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+  assert:
+    - type: icontains
+      value: '"bug"'
+    - type: icontains
+      value: '"feature"'
+
+- description: "pr-prepare: --label bug --label bug deduplicates"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--label bug --label bug"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+  assert:
+    - type: regex
+      value: '"forcedLabels":\s*\[\s*"bug"\s*\]'
+
+- description: "pr-prepare: config present includes prConfig"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-config"
+  assert:
+    - type: icontains
+      value: '"requiredLabels"'
+    - type: icontains
+      value: '"review"'
+
+- description: "pr-prepare: no config sets prConfig null"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+  assert:
+    - type: icontains
+      value: '"prConfig": null'
+
+# fetchBaseRef non-fatal when origin is unreachable (issue #239).
+# pr.js calls lib/git.js::fetchBaseRef before getDiffStat/getDiffContent. The
+# fetch itself fails (host is RFC 2606 .invalid), but the script must still
+# produce its prepare output without throwing.
+- description: "pr-prepare: fetchBaseRef non-fatal when origin unreachable (issue #239)"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/git-lib-unreachable-origin"
+  assert:
+    # pr.js failing to throw produces some structured output (errors array or PR fields).
+    # We do not assert on a specific success field because the no-gh path will populate
+    # warnings/errors — the contract is "did not crash with an unhandled exception".
+    - type: not-contains
+      value: 'Error: spawnSync'
+    - type: not-contains
+      value: 'fatal: unable to access'
+
+# Link verification gate (issue #198) — pr.js --validate-body
+# Reads PR body from --file (or stdin) and validates URLs via lib/links.js.
+# Uses SDLC_LINKS_OFFLINE=1 so generic URLs are skipped; identity checks still run.
+
+- description: "pr.js --validate-body: clean body with matching repo owner passes"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--validate-body --file {{project_root}}/body-clean.md --json"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-link-validate"
+    script_env: '{"SDLC_LINKS_OFFLINE":"1"}'
+  assert:
+    - type: contains
+      value: '"ok":true'
+
+- description: "pr.js --validate-body: wrong-owner github URL (PR #192 case) aborts with github-context-mismatch"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--validate-body --file {{project_root}}/body-wrong-owner.md --json"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-link-validate"
+    script_env: '{"SDLC_LINKS_OFFLINE":"1"}'
+  assert:
+    - type: contains
+      value: '"ok":false'
+    - type: contains
+      value: 'github-context-mismatch'
+    - type: contains
+      value: '"observed":"rafalnagr/sdlc-marketplace"'
+    - type: contains
+      value: '"expected":"rnagrodzki/sdlc-marketplace"'
+
+- description: "pr.js --validate-body: generic 404 URL aborts with url-not-found"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--validate-body --file {{project_root}}/body-generic-404.md --json"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-link-validate"
+  assert:
+    - type: contains
+      value: '"ok":false'
+    - type: contains
+      value: 'url-not-found'
+
+- description: "pr.js: --output-file writes to os.tmpdir() (issue #209 regression test)"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_args: "--output-file"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+    script_passthrough: true
+  assert:
+    - type: regex
+      value: '^/(tmp|var|private)/.+pr-context-[0-9a-f]+\.json\s*$'
+    - type: not-icontains
+      value: '"remoteState":'
+
+- description: "pr.js: without --output-file, output is still a tmpdir path (stdout-JSON fallback removed)"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-no-config"
+    script_passthrough: true
+  assert:
+    - type: regex
+      value: '^/(tmp|var|private)/.+pr-context-[0-9a-f]+\.json\s*$'
+    - type: not-icontains
+      value: '"remoteState":'
+
+# ---------------------------------------------------------------------------
+# Issue #260: pr-template path resolution via lib/pr-template.js
+# ---------------------------------------------------------------------------
+
+- description: "pr.js: template at .sdlc/pr-template.md is resolved (canonical, no warning)"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-template-sdlc"
+  assert:
+    - type: not-icontains
+      value: 'Deprecation: .claude/pr-template.md'
+
+- description: "pr.js: template at .claude/pr-template.md (legacy only) emits one-time deprecation warning"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-template-claude-legacy"
+    script_capture_stderr: true
+  assert:
+    - type: icontains
+      value: 'Deprecation: .claude/pr-template.md'
+    - type: icontains
+      value: '.sdlc/pr-template.md'
+
+- description: "pr.js: with both templates present, .sdlc/ wins (no warning)"
+  vars:
+    script_path: "repo://scripts/skill/pr.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-pr-template-both"
+  assert:
+    - type: not-icontains
+      value: 'Deprecation: .claude/pr-template.md'

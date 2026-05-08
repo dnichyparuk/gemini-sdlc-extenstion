@@ -1,0 +1,213 @@
+# Script execution tests for commit-prepare.js.
+# These tests run commit-prepare.js directly against fixture directories (no LLM).
+# Ported from tests/unit/commit-prepare.test.js.
+
+- description: "commit-prepare: default flags with no args"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+  assert:
+    - type: icontains
+      value: '"noStash": false'
+    - type: icontains
+      value: '"amend": false'
+    - type: icontains
+      value: '"auto": false'
+
+- description: "commit-prepare: --type feat parses correctly"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--type feat"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+  assert:
+    - type: icontains
+      value: '"type": "feat"'
+
+- description: "commit-prepare: --scope auth parses correctly"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--scope auth"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+  assert:
+    - type: icontains
+      value: '"scope": "auth"'
+
+- description: "commit-prepare: --no-stash flag"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--no-stash"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+  assert:
+    - type: icontains
+      value: '"noStash": true'
+
+- description: "commit-prepare: --amend flag"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--amend"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+  assert:
+    - type: icontains
+      value: '"amend": true'
+
+- description: "commit-prepare: --auto flag"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--auto"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+  assert:
+    - type: icontains
+      value: '"auto": true'
+
+- description: "commit-prepare: config present includes commitConfig"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-config"
+  assert:
+    - type: icontains
+      value: '"allowedTypes"'
+    - type: icontains
+      value: '"feat"'
+
+- description: "commit-prepare: no config sets commitConfig null"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+  assert:
+    - type: icontains
+      value: '"commitConfig": null'
+
+- description: "commit-prepare: --type chore violates allowedTypes"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--type chore"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-config"
+  assert:
+    - type: icontains
+      value: "not allowed"
+    - type: icontains
+      value: "Allowed types"
+
+- description: "commit-prepare: --scope ui violates allowedScopes"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--scope ui"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-config"
+  assert:
+    - type: icontains
+      value: "not allowed"
+    - type: icontains
+      value: "Allowed scopes"
+
+- description: "commit-prepare: --type feat passes allowedTypes validation"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--type feat"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-config"
+  assert:
+    - type: icontains
+      value: '"errors": []'
+
+- description: "commit-prepare: --scope auth passes allowedScopes validation"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--scope auth"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-config"
+  assert:
+    - type: icontains
+      value: '"errors": []'
+
+- description: "commit-prepare: large diff triggers truncation"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-large-diff"
+  assert:
+    - type: icontains
+      value: '"diffTruncated": true'
+    - type: icontains
+      value: '"truncatedFiles"'
+    - type: icontains
+      value: '# --- Truncated ---'
+
+- description: "commit-prepare: truncated diff preserves complete file list and diffstat"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-large-diff"
+  assert:
+    - type: icontains
+      value: '"fileCount": 25'
+    - type: icontains
+      value: '"diffStat"'
+
+- description: "commit-prepare: small diff is not truncated"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+  assert:
+    - type: icontains
+      value: '"diffTruncated": false'
+    - type: icontains
+      value: '"truncatedFiles": []'
+
+- description: "commit-prepare: --output-file writes payload to temp file and prints absolute path"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--output-file"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+    script_passthrough: true
+  assert:
+    # stdout is an absolute path, not the JSON payload
+    - type: regex
+      value: '^/.+/commit-context-[0-9a-f]+\.json\s*$'
+    # The payload should NOT be on stdout when --output-file is set
+    - type: not-icontains
+      value: '"flags":'
+
+- description: "commit-prepare: without --output-file, output is still a tmpdir path (issue #209 — stdout-JSON fallback removed)"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+    script_passthrough: true
+  assert:
+    # The stdout-JSON branch was removed in #209; writeOutput now always writes
+    # to os.tmpdir() and prints only the path. The legacy "JSON inline" branch
+    # is gone.
+    - type: regex
+      value: '^/(tmp|var|private)/.+commit-context-[0-9a-f]+\.json\s*$'
+    - type: not-icontains
+      value: '"flags":'
+    # Cwd MUST NOT contain a stray *-context-*.json after the run.
+    - type: not-icontains
+      value: 'cwd-leak'
+
+- description: "commit-prepare: --output-file path is under os.tmpdir() (issue #209 regression test)"
+  vars:
+    script_path: "repo://scripts/skill/commit.js"
+    script_args: "--output-file"
+    script_cwd: "{{project_root}}"
+    project_root: "file://fixtures-fs/project-commit-no-config"
+    script_passthrough: true
+  assert:
+    # Path must start with /tmp, /var, or /private — never the project root.
+    - type: regex
+      value: '^/(tmp|var|private)/.+commit-context-[0-9a-f]+\.json\s*$'
+    # Sanity: payload absent from stdout
+    - type: not-icontains
+      value: '"flags":'
